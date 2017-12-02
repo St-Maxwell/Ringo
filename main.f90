@@ -6,10 +6,10 @@
 module diamat
     contains
     !*****************************************************
-    ! Çó½âÊµ¶Ô³Æ¾ØÕóµÄÌØÕ÷¾ØÕóºÍÌØÕ÷Öµ
-    ! mat¡ª¡ª¡ª¡ª´ıÇó½â¾ØÕó
-    ! eigvecmat¡ª¡ª¡ª¡ªÌØÕ÷¾ØÕó
-    ! eigvalarr¡ª¡ª¡ª¡ªÌØÕ÷Öµ
+    ! æ±‚è§£å®å¯¹ç§°çŸ©é˜µçš„ç‰¹å¾çŸ©é˜µå’Œç‰¹å¾å€¼
+    ! matâ€”â€”â€”â€”å¾…æ±‚è§£çŸ©é˜µ
+    ! eigvecmatâ€”â€”â€”â€”ç‰¹å¾çŸ©é˜µ
+    ! eigvalarrâ€”â€”â€”â€”ç‰¹å¾å€¼
     !*****************************************************
     subroutine diagsymat(mat,eigvecmat,eigvalarr,istat)
         implicit none
@@ -28,7 +28,7 @@ module diamat
     end subroutine
 end module
 program rhf_sto3g
-    use lapack95 ! ±¾³ÌĞòÓÃÓÚ¶Ô½Ç»¯¾ØÕó²¿·ÖÒÀÀµMKL¿âµÄLAPACK°ü£¬±àÒëÊ±ĞèÁ´½Ó
+    use lapack95 ! æœ¬ç¨‹åºç”¨äºå¯¹è§’åŒ–çŸ©é˜µéƒ¨åˆ†ä¾èµ–MKLåº“çš„LAPACKåŒ…ï¼Œç¼–è¯‘æ—¶éœ€é“¾æ¥
     use diamat
     implicit none
     real(kind=8),external :: overlap,kinetic,nu_attrac,two_elec
@@ -58,14 +58,16 @@ program rhf_sto3g
     real(kind=8) :: nu_repuls=0D0
     real(kind=8) :: energy_total=0D0
     real(kind=8) :: Mulliken_charge(2)=0D0
-    real(kind=8) :: nu_charge(2)=(/2.0D0,1.0D0/) ! 1ºÅÊÇHe£¬2ºÅÊÇH
+    real(kind=8) :: nu_charge(2)=(/2.0D0,1.0D0/) ! 1å·æ˜¯Heï¼Œ2å·æ˜¯H
     real(kind=8) :: R_mo=1.4632D0
     real(kind=8) :: R_atom(2)
+    real :: time_begin,time_end
     integer :: i,j,k,l,p,q,x,y,steps
     integer :: istat=0
     !-----------------------------------------------------
-    R_atom(1)=-4.001506D0/(1.007276D0+4.001506D0)*R_mo
-    R_atom(2)=1.007276D0/(1.007276D0+4.001506D0)*R_mo
+    call cpu_time(time_begin)
+    R_atom(1)=1.007276D0/(1.007276D0+4.001506D0)*R_mo
+    R_atom(2)=-4.001506D0/(1.007276D0+4.001506D0)*R_mo
     nu_repuls=nu_charge(1)*nu_charge(2)/R_mo
     !--------------Calculate matrix elements--------------
     do i=1,2
@@ -96,7 +98,7 @@ program rhf_sto3g
             end do
         end do
     end do
-    !-----------¶Ô½Ç»¯ÖØµş¾ØÕó£¬²¢µÃµ½ÃÜ¶È¾ØÕóµÄ³õ²Â------------
+    !-----------å¯¹è§’åŒ–é‡å çŸ©é˜µï¼Œå¹¶å¾—åˆ°å¯†åº¦çŸ©é˜µçš„åˆçŒœ------------
     H_core=T_kinetic+V_nuattrac1+V_nuattrac2
     call diagsymat(S_overlap,unitary,eigvalarr,istat)
     forall(i=1:2) s_overlap12(i,i)=1.0D0/sqrt(eigvalarr(i))
@@ -145,7 +147,7 @@ program rhf_sto3g
                 energy_e=energy_e+0.5D0*P_rho(j,i)*(H_core(i,j)+Fock(i,j))
             end do
         end do
-        if (abs(energy_e-energy_eold)<1.0D-6) exit ! ÊÕÁ²±ê×¼delta<1.0D-6
+        if (abs(energy_e-energy_eold)<1.0D-6) exit ! æ”¶æ•›æ ‡å‡†delta<1.0D-6
         G_twoe=0.0D0
         do i=1,2
             do j=1,2
@@ -166,6 +168,7 @@ program rhf_sto3g
     end do
     Mulliken_charge(1)=Mulliken_charge(1)+nu_charge(1)
     Mulliken_charge(2)=Mulliken_charge(2)+nu_charge(2)
+    call cpu_time(time_end)
     !-----------------------Output------------------------
     write(*,"(' Ringo: a HeH+ RHF/STO-3G calculation program')")
     write(*,"(' Ringo Is Not Gaussian/Orca')")
@@ -182,26 +185,27 @@ program rhf_sto3g
         write(*,"(' Occupied orbital eigenvalue = ',F10.6,' a.u.')") energy(1,1)
         write(*,"(' Virtual  orbital eigenvalue = ',F10.6,' a.u.',/)") energy(2,2)
         write(*,"(' ----- Molecular Orbitals Coefficients -----')")
-        write(*,"('                        phi1     phi2 ')") 
-        write(*,"(' Occupied orbital --  ',F8.5,'  ',F8.5)") (C_coeff(1,i),i=1,2)
-        write(*,"(' Virtual  orbital --  ',F8.5,'  ',F8.5,/)") (C_coeff(2,i),i=1,2)
+        write(*,"('                        phi1      phi2 ')") 
+        write(*,"(' Occupied orbital --  ',F8.5,'  ',F8.5)") (C_coeff(i,1),i=1,2)
+        write(*,"(' Virtual  orbital --  ',F8.5,'  ',F8.5,/)") (C_coeff(i,2),i=1,2)
     else
         write(*,"(' Occupied orbital eigenvalue = ',F10.6,' a.u.')") energy(2,2)
         write(*,"(' Virtual orbital eigenvalue = ',F10.6,' a.u.',/)") energy(1,1)
         write(*,"(' ----- Molecular Orbitals Coefficients -----')")
-        write(*,"('                        phi1      phi2 ')") 
-        write(*,"(' Occupied orbital --  ',F8.5,'  ',F8.5)") (C_coeff(2,i),i=1,2)
-        write(*,"(' Virtual  orbital --  ',F8.5,'  ',F8.5,/)") (C_coeff(1,i),i=1,2)
+        write(*,"('                        phi1       phi2 ')") 
+        write(*,"(' Occupied orbital --  ',F8.5,'  ',F8.5)") (C_coeff(i,2),i=1,2)
+        write(*,"(' Virtual  orbital --  ',F8.5,'  ',F8.5,/)") (C_coeff(i,1),i=1,2)
     end if
     write(*,"(' ----- Mulliken Charges -----')")
-    write(*,"(' He  ',F7.5)") Mulliken_charge(1)
-    write(*,"(' H   ',F7.5)") Mulliken_charge(2)
+    write(*,"(' He  ',F8.6)") Mulliken_charge(1)
+    write(*,"(' H   ',F8.6,/)") Mulliken_charge(2)
+    write(*,"(' Job cpu time: ',F6.4,' seconds.')") time_end-time_begin
     read(*,*)
 end program
 !*********************************************************
-! ÖØµş»ı·Ö
-! alpha,beta¡ª¡ª¡ª¡ªGaussianº¯ÊıµÄÖ¸ÊıÏµÊı
-! R_A,R_B¡ª¡ª¡ª¡ªGaussianº¯ÊıµÄÖĞĞÄ
+! é‡å ç§¯åˆ†
+! alpha,betaâ€”â€”â€”â€”Gaussianå‡½æ•°çš„æŒ‡æ•°ç³»æ•°
+! R_A,R_Bâ€”â€”â€”â€”Gaussianå‡½æ•°çš„ä¸­å¿ƒ
 !*********************************************************
 function overlap(alpha,beta,R_A,R_B)
     implicit none
@@ -211,9 +215,9 @@ function overlap(alpha,beta,R_A,R_B)
     overlap=(4.0D0*alpha*beta)**0.75D0/(alpha+beta)**1.5D0*exp(-alpha*beta/(alpha+beta)*(R_A-R_B)*(R_A-R_B))
 end function
 !*********************************************************
-! ¶¯ÄÜ»ı·Ö
-! alpha,beta¡ª¡ª¡ª¡ªGaussianº¯ÊıµÄÖ¸ÊıÏµÊı
-! R_A,R_B¡ª¡ª¡ª¡ªGaussianº¯ÊıµÄÖĞĞÄ
+! åŠ¨èƒ½ç§¯åˆ†
+! alpha,betaâ€”â€”â€”â€”Gaussianå‡½æ•°çš„æŒ‡æ•°ç³»æ•°
+! R_A,R_Bâ€”â€”â€”â€”Gaussianå‡½æ•°çš„ä¸­å¿ƒ
 !********************************************************* 
 function kinetic(alpha,beta,R_A,R_B)
     implicit none
@@ -224,11 +228,11 @@ function kinetic(alpha,beta,R_A,R_B)
            & *exp(-alpha*beta/(alpha+beta)*(R_A-R_B)*(R_A-R_B))
 end function
 !*********************************************************
-! ºË¿âÂØ»ı·Ö
-! charge¡ª¡ª¡ª¡ªºËµçºÉ
-! alpha,beta¡ª¡ª¡ª¡ªGaussianº¯ÊıµÄÖ¸ÊıÏµÊı
-! R_A,R_B¡ª¡ª¡ª¡ªGaussianº¯Êı£¨µç×Ó£©µÄÖĞĞÄ
-! R_C¡ª¡ª¡ª¡ªºË×ø±ê
+! æ ¸åº“ä»‘ç§¯åˆ†
+! chargeâ€”â€”â€”â€”æ ¸ç”µè·
+! alpha,betaâ€”â€”â€”â€”Gaussianå‡½æ•°çš„æŒ‡æ•°ç³»æ•°
+! R_A,R_Bâ€”â€”â€”â€”Gaussianå‡½æ•°ï¼ˆç”µå­ï¼‰çš„ä¸­å¿ƒ
+! R_Câ€”â€”â€”â€”æ ¸åæ ‡
 !*********************************************************
 function nu_attrac(charge,alpha,beta,R_A,R_B,R_C)
     implicit none
@@ -241,21 +245,21 @@ function nu_attrac(charge,alpha,beta,R_A,R_B,R_C)
     R_P=(alpha*R_A+beta*R_B)/(alpha+beta)
     t=(alpha+beta)*(R_P-R_C)*(R_P-R_C)
     if (t<1.0D-06) then
-        nu_attrac=-charge*5.656854249D00/sqrt(pi)*(alpha*beta)**0.75D0/(alpha+beta) ! ²Î¿¼Ideas of Quantum Chemistry APPENDIX P
+        nu_attrac=-charge*5.656854249D00/sqrt(pi)*(alpha*beta)**0.75D0/(alpha+beta) ! å‚è€ƒIdeas of Quantum Chemistry APPENDIX P
     else
         nu_attrac=-(4.0D0*alpha*beta)**0.75D0/(alpha+beta)*charge*exp(-alpha*beta/(alpha+beta)*(R_A-R_B)*(R_A-R_B))*erf(sqrt(t))/sqrt(t)
     end if
 end function
 !*********************************************************
-! Ë«µç×Ó»ı·Ö
-! alpha,beta,gama,delta¡ª¡ª¡ª¡ªGaussianº¯ÊıµÄÖ¸ÊıÏµÊı
-! R_A,R_B,R_C,R_D¡ª¡ª¡ª¡ªGaussianº¯ÊıµÄÖĞĞÄ
-! R_P¡ª¡ª¡ª¡ªalpha,beta¶ÔÓ¦µÄGaussianº¯ÊıµÄµÈĞ§ÖĞĞÄ
-! R_Q¡ª¡ª¡ª¡ªgama,delta¶ÔÓ¦µÄGaussianº¯ÊıµÄµÈĞ§ÖĞĞÄ
+! åŒç”µå­ç§¯åˆ†
+! alpha,beta,gama,deltaâ€”â€”â€”â€”Gaussianå‡½æ•°çš„æŒ‡æ•°ç³»æ•°
+! R_A,R_B,R_C,R_Dâ€”â€”â€”â€”Gaussianå‡½æ•°çš„ä¸­å¿ƒ
+! R_Pâ€”â€”â€”â€”alpha,betaå¯¹åº”çš„Gaussianå‡½æ•°çš„ç­‰æ•ˆä¸­å¿ƒ
+! R_Qâ€”â€”â€”â€”gama,deltaå¯¹åº”çš„Gaussianå‡½æ•°çš„ç­‰æ•ˆä¸­å¿ƒ
 !*********************************************************
 function two_elec(alpha,beta,gama,delta,R_A,R_B,R_C,R_D)
     implicit none
-    real(kind=8) :: alpha,beta,gama,delta,R_A,R_B,R_C,R_D,R_P,R_Q ! gammaÊÇÄÚ½¨º¯Êı£¬Ğ´³ÉgamaÒÔ±ÜÃâ³åÍ»
+    real(kind=8) :: alpha,beta,gama,delta,R_A,R_B,R_C,R_D,R_P,R_Q ! gammaæ˜¯å†…å»ºå‡½æ•°ï¼Œå†™æˆgamaä»¥é¿å…å†²çª
     real(kind=8) :: two_elec
     real(kind=8) :: t
     real(kind=8),parameter :: pi=3.1415926535897932385D+00
@@ -265,7 +269,7 @@ function two_elec(alpha,beta,gama,delta,R_A,R_B,R_C,R_D)
     t=(alpha+beta)*(gama+delta)/(alpha+beta+gama+delta)*(R_P-R_Q)*(R_P-R_Q)
     if (t<1.0D-06) then
         two_elec=16.0D0/sqrt(pi)*(alpha*beta*gama*delta)**0.75D0/((alpha+beta)*(gama+delta)*sqrt(alpha+beta+gama+delta))* &
-            & exp(-alpha*beta/(alpha+beta)*(R_A-R_B)*(R_A-R_B)-gama*delta/(gama+delta)*(R_C-R_D)*(R_C-R_D)) ! ²Î¿¼Ideas of Quantum Chemistry APPENDIX P
+            & exp(-alpha*beta/(alpha+beta)*(R_A-R_B)*(R_A-R_B)-gama*delta/(gama+delta)*(R_C-R_D)*(R_C-R_D)) ! å‚è€ƒIdeas of Quantum Chemistry APPENDIX P
     else
         two_elec=8.0D0*(alpha*beta*gama*delta)**0.75D0/((alpha+beta)*(gama+delta)*sqrt(alpha+beta+gama+delta))* &
             & exp(-alpha*beta/(alpha+beta)*(R_A-R_B)*(R_A-R_B)-gama*delta/(gama+delta)*(R_C-R_D)*(R_C-R_D))*erf(sqrt(t))/sqrt(t)
