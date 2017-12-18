@@ -202,16 +202,14 @@ function Distance(ra,rb)
 end function
 function BoysF(x)
     implicit none
-    real(kind = 8) BoysF
-    real(kind = 8) x    
-    integer, parameter:: NSTEP = 1000000
-    real(kind = 8), parameter:: DT = 1.0D-6
-    integer i
+    real(kind = 8) :: BoysF
+    real(kind = 8) :: x    
+    real(kind=8),parameter :: pi=3.1415926535897932385D+00
     ! --------------------------------------------------------
-    BoysF = 0.0000D+00
-    do i = 1, NSTEP
-        BoysF = BoysF+exp(-x*DT*DT*i*i)
-    enddo
-    BoysF = BoysF*DT
+    if (x<1.0D-6) then
+        BoysF=1.0D0
+    else
+        BoysF=dsqrt(pi/(4.0D0*x))*derf(dsqrt(x))
+    end if 
     return
 end function
