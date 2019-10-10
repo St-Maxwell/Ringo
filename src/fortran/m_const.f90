@@ -25,11 +25,9 @@ module m_const
 
   ! elements
   integer, parameter :: num_supported_elements = 18
-  character(len=2), parameter :: element_list(num_supported_elements) =  &
-  ['H ',                                     'He', &
-   'Li', 'Be', 'B ', 'C ', 'N ', 'O ', 'F ', 'Ne', &
-   'Na', 'Mg', 'Al', 'Si', 'P ', 'S ', 'Cl', 'Ar']
-
-
+  character(len=2), parameter :: element_list(num_supported_elements) = &
+                                 ['H ', 'He', &
+                                  'Li', 'Be', 'B ', 'C ', 'N ', 'O ', 'F ', 'Ne', &
+                                  'Na', 'Mg', 'Al', 'Si', 'P ', 'S ', 'Cl', 'Ar']
 
 end module
