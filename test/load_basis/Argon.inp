@@ -1,0 +1,7 @@
+geometry = {
+0 1
+Ar                 0.00000000    0.00000000    0.00000000
+}
+
+basis = cc-pVTZ
+method = hf

@@ -1,0 +1,578 @@
+ Hydrogen_Fluoride.inp / 6-31G
+Number of Basis Function:  11
+Number of Shell:   5
+Number of Primitive Gaussian:  26
+Maximum Angular Momentum:   1
+Number of Basis Functions in Shell:   1   4   4   1   1
+Shell's Indecies:   1   2   6  10  11
+ =======================================================
+Contraction Order:   6
+Centering at:  -0.959499  -0.192661  -0.020415
+Angular Momentum:   0
+    Exponent       Coefficient  
+   7.001713E+03   1.819617E-03
+   1.051366E+03   1.391608E-02
+   2.392857E+02   6.840532E-02
+   6.739745E+01   2.331858E-01
+   2.151996E+01   4.712674E-01
+   7.403101E+00   3.566185E-01
+ =======================================================
+Contraction Order:   3
+Centering at:  -0.959499  -0.192661  -0.020415
+Angular Momentum:   0
+    Exponent       Coefficient  
+   2.084795E+01  -1.085070E-01
+   4.808308E+00  -1.464517E-01
+   1.344070E+00   1.128689E+00
+ =======================================================
+Contraction Order:   3
+Centering at:  -0.959499  -0.192661  -0.020415
+Angular Momentum:   1
+    Exponent       Coefficient  
+   2.084795E+01   7.162872E-02
+   4.808308E+00   3.459121E-01
+   1.344070E+00   7.224700E-01
+ =======================================================
+Contraction Order:   3
+Centering at:  -0.959499  -0.192661  -0.020415
+Angular Momentum:   1
+    Exponent       Coefficient  
+   2.084795E+01   7.162872E-02
+   4.808308E+00   3.459121E-01
+   1.344070E+00   7.224700E-01
+ =======================================================
+Contraction Order:   3
+Centering at:  -0.959499  -0.192661  -0.020415
+Angular Momentum:   1
+    Exponent       Coefficient  
+   2.084795E+01   7.162872E-02
+   4.808308E+00   3.459121E-01
+   1.344070E+00   7.224700E-01
+ =======================================================
+Contraction Order:   1
+Centering at:  -0.959499  -0.192661  -0.020415
+Angular Momentum:   0
+    Exponent       Coefficient  
+   3.581514E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:  -0.959499  -0.192661  -0.020415
+Angular Momentum:   1
+    Exponent       Coefficient  
+   3.581514E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:  -0.959499  -0.192661  -0.020415
+Angular Momentum:   1
+    Exponent       Coefficient  
+   3.581514E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:  -0.959499  -0.192661  -0.020415
+Angular Momentum:   1
+    Exponent       Coefficient  
+   3.581514E-01   1.000000E+00
+ =======================================================
+Contraction Order:   3
+Centering at:  -1.839499  -0.192661  -0.020415
+Angular Momentum:   0
+    Exponent       Coefficient  
+   1.873114E+01   3.349460E-02
+   2.825394E+00   2.347269E-01
+   6.401217E-01   8.137573E-01
+ =======================================================
+Contraction Order:   1
+Centering at:  -1.839499  -0.192661  -0.020415
+Angular Momentum:   0
+    Exponent       Coefficient  
+   1.612778E-01   1.000000E+00
+
+
+ water.inp / def2-SVP
+Number of Basis Function:  25
+Number of Shell:  12
+Number of Primitive Gaussian:  39
+Maximum Angular Momentum:   2
+Number of Basis Functions in Shell:   1   1   1   3   3   6   1   1   3   1   1   3
+Shell's Indecies:   1   2   3   4   7  10  16  17  18  21  22  23
+ =======================================================
+Contraction Order:   5
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   0
+    Exponent       Coefficient  
+   2.266177E+03  -5.343181E-03
+   3.408701E+02  -3.989004E-02
+   7.736314E+01  -1.785391E-01
+   2.147964E+01  -4.642768E-01
+   6.658943E+00  -4.430975E-01
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   0
+    Exponent       Coefficient  
+   8.097598E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   0
+    Exponent       Coefficient  
+   2.553077E-01   1.000000E+00
+ =======================================================
+Contraction Order:   3
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   1
+    Exponent       Coefficient  
+   1.772150E+01   4.339457E-02
+   3.863551E+00   2.309412E-01
+   1.048092E+00   5.137531E-01
+ =======================================================
+Contraction Order:   3
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   1
+    Exponent       Coefficient  
+   1.772150E+01   4.339457E-02
+   3.863551E+00   2.309412E-01
+   1.048092E+00   5.137531E-01
+ =======================================================
+Contraction Order:   3
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   1
+    Exponent       Coefficient  
+   1.772150E+01   4.339457E-02
+   3.863551E+00   2.309412E-01
+   1.048092E+00   5.137531E-01
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   1
+    Exponent       Coefficient  
+   2.764154E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   1
+    Exponent       Coefficient  
+   2.764154E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   1
+    Exponent       Coefficient  
+   2.764154E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.200000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.200000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.200000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.200000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.200000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.000000  -0.110851
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.200000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   3
+Centering at:   0.000000  -0.783837   0.443405
+Angular Momentum:   0
+    Exponent       Coefficient  
+   1.301070E+01   1.968216E-02
+   1.962257E+00   1.379652E-01
+   4.445380E-01   4.783193E-01
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.783837   0.443405
+Angular Momentum:   0
+    Exponent       Coefficient  
+   1.219496E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.783837   0.443405
+Angular Momentum:   1
+    Exponent       Coefficient  
+   8.000000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.783837   0.443405
+Angular Momentum:   1
+    Exponent       Coefficient  
+   8.000000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000  -0.783837   0.443405
+Angular Momentum:   1
+    Exponent       Coefficient  
+   8.000000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   3
+Centering at:  -0.000000   0.783837   0.443405
+Angular Momentum:   0
+    Exponent       Coefficient  
+   1.301070E+01   1.968216E-02
+   1.962257E+00   1.379652E-01
+   4.445380E-01   4.783193E-01
+ =======================================================
+Contraction Order:   1
+Centering at:  -0.000000   0.783837   0.443405
+Angular Momentum:   0
+    Exponent       Coefficient  
+   1.219496E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:  -0.000000   0.783837   0.443405
+Angular Momentum:   1
+    Exponent       Coefficient  
+   8.000000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:  -0.000000   0.783837   0.443405
+Angular Momentum:   1
+    Exponent       Coefficient  
+   8.000000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:  -0.000000   0.783837   0.443405
+Angular Momentum:   1
+    Exponent       Coefficient  
+   8.000000E-01   1.000000E+00
+
+
+ Argon.inp / cc-pVTZ
+Number of Basis Function:  39
+Number of Shell:  12
+Number of Primitive Gaussian: 111
+Maximum Angular Momentum:   3
+Number of Basis Functions in Shell:   1   1   1   1   1   3   3   3   3   6   6  10
+Shell's Indecies:   1   2   3   4   5   6   9  12  15  18  24  30
+ =======================================================
+Contraction Order:  13
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   0
+    Exponent       Coefficient  
+   5.450000E+05   4.558280E-05
+   8.164000E+04   3.541080E-04
+   1.858000E+04   1.857970E-03
+   5.261000E+03   7.768510E-03
+   1.717000E+03   2.742320E-02
+   6.199000E+02   8.238360E-02
+   2.416000E+02   2.012300E-01
+   9.979000E+01   3.567810E-01
+   4.315000E+01   3.495630E-01
+   1.914000E+01   1.182660E-01
+   7.488000E+00   5.601900E-03
+   3.205000E+00   4.834730E-04
+   5.204000E-01   2.920250E-05
+ =======================================================
+Contraction Order:  13
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   0
+    Exponent       Coefficient  
+   5.450000E+05  -1.295510E-05
+   8.164000E+04  -1.004280E-04
+   1.858000E+04  -5.295830E-04
+   5.261000E+03  -2.213960E-03
+   1.717000E+03  -7.968450E-03
+   6.199000E+02  -2.458030E-02
+   2.416000E+02  -6.577980E-02
+   9.979000E+01  -1.379420E-01
+   4.315000E+01  -2.016300E-01
+   1.914000E+01  -4.128340E-02
+   7.488000E+00   4.846800E-01
+   3.205000E+00   5.792240E-01
+   5.204000E-01  -7.275530E-03
+ =======================================================
+Contraction Order:  13
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   0
+    Exponent       Coefficient  
+   5.450000E+05   4.049900E-06
+   8.164000E+04   3.136910E-05
+   1.858000E+04   1.656460E-04
+   5.261000E+03   6.916620E-04
+   1.717000E+03   2.497900E-03
+   6.199000E+02   7.710740E-03
+   2.416000E+02   2.087140E-02
+   9.979000E+01   4.439650E-02
+   4.315000E+01   6.802240E-02
+   1.914000E+01   1.413500E-02
+   7.488000E+00  -2.074890E-01
+   3.205000E+00  -4.250450E-01
+   5.204000E-01   7.336270E-01
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   0
+    Exponent       Coefficient  
+   1.196000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   0
+    Exponent       Coefficient  
+   1.954000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   7
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   7.618000E+02   2.369760E-03
+   1.802000E+02   1.901990E-02
+   5.750000E+01   8.808070E-02
+   2.124000E+01   2.563770E-01
+   8.388000E+00   4.387110E-01
+   3.416000E+00   3.475690E-01
+   4.523000E-01  -5.238820E-03
+ =======================================================
+Contraction Order:   7
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   7.618000E+02   2.369760E-03
+   1.802000E+02   1.901990E-02
+   5.750000E+01   8.808070E-02
+   2.124000E+01   2.563770E-01
+   8.388000E+00   4.387110E-01
+   3.416000E+00   3.475690E-01
+   4.523000E-01  -5.238820E-03
+ =======================================================
+Contraction Order:   7
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   7.618000E+02   2.369760E-03
+   1.802000E+02   1.901990E-02
+   5.750000E+01   8.808070E-02
+   2.124000E+01   2.563770E-01
+   8.388000E+00   4.387110E-01
+   3.416000E+00   3.475690E-01
+   4.523000E-01  -5.238820E-03
+ =======================================================
+Contraction Order:   7
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   7.618000E+02  -6.672110E-04
+   1.802000E+02  -5.327170E-03
+   5.750000E+01  -2.554940E-02
+   2.124000E+01  -7.571970E-02
+   8.388000E+00  -1.411330E-01
+   3.416000E+00  -9.327680E-02
+   4.523000E-01   5.624500E-01
+ =======================================================
+Contraction Order:   7
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   7.618000E+02  -6.672110E-04
+   1.802000E+02  -5.327170E-03
+   5.750000E+01  -2.554940E-02
+   2.124000E+01  -7.571970E-02
+   8.388000E+00  -1.411330E-01
+   3.416000E+00  -9.327680E-02
+   4.523000E-01   5.624500E-01
+ =======================================================
+Contraction Order:   7
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   7.618000E+02  -6.672110E-04
+   1.802000E+02  -5.327170E-03
+   5.750000E+01  -2.554940E-02
+   2.124000E+01  -7.571970E-02
+   8.388000E+00  -1.411330E-01
+   3.416000E+00  -9.327680E-02
+   4.523000E-01   5.624500E-01
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   1.206000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   1.206000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   1.206000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   1.545000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   1.545000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   1
+    Exponent       Coefficient  
+   1.545000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   4.100000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   4.100000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   4.100000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   4.100000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   4.100000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   4.100000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.254000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.254000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.254000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.254000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.254000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   2
+    Exponent       Coefficient  
+   1.254000E+00   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   3
+    Exponent       Coefficient  
+   8.900000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   3
+    Exponent       Coefficient  
+   8.900000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   3
+    Exponent       Coefficient  
+   8.900000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   3
+    Exponent       Coefficient  
+   8.900000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   3
+    Exponent       Coefficient  
+   8.900000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   3
+    Exponent       Coefficient  
+   8.900000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   3
+    Exponent       Coefficient  
+   8.900000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   3
+    Exponent       Coefficient  
+   8.900000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   3
+    Exponent       Coefficient  
+   8.900000E-01   1.000000E+00
+ =======================================================
+Contraction Order:   1
+Centering at:   0.000000   0.000000   0.000000
+Angular Momentum:   3
+    Exponent       Coefficient  
+   8.900000E-01   1.000000E+00
+
+

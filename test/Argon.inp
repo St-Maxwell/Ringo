@@ -1,6 +1,0 @@
-geometry = {
-Ar     0.,  0.,  0.
-}
-
-basis = 6-31G
-scf = hf
