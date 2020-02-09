@@ -1,72 +1,83 @@
 module mod_basis
+    use mod_const
     use mod_io
     use mod_mol
     implicit none
 
     type ShellEnum
-        integer :: s 
+        integer :: s
         integer :: sp
-        integer :: p 
-        integer :: d 
-        integer :: f 
-        integer :: g 
-        integer :: h 
-        integer :: i 
+        integer :: p
+        integer :: d
+        integer :: f
+        integer :: g
+        integer :: h
+        integer :: i
     end type
 
+    type Shell
+        integer :: cntrOrder
+        real(kind=r8), dimension(:), allocatable :: expnt
+        real(kind=r8), dimension(:), allocatable :: coeff
+    contains
+        final :: destroy_shell
+    end type Shell
+    
     type BasisSet
-        integer :: num_basis
-        integer :: num_shell
-        integer :: num_gto
-        integer :: max_angl ! maximum angular momentum
-        type(BasisFunction), dimension(:), allocatable :: basis ! Basis Functions
-        integer, dimension(:), allocatable :: shl_idx ! subscript of shell in basis functions' dimension
-        integer, dimension(:), allocatable :: n_bf_in_shl ! number of basis functions in shell
+        integer :: numBasis
+        integer :: numShell
+        integer :: numGTO
+        integer :: numPrimitive
+        integer :: maxAngl ! maximum angular momentum
+        integer, dimension(:), allocatable :: angl
+        integer, dimension(:), allocatable :: cntrOrder
+        integer, dimension(:), allocatable :: numCntrBasis
+        real(kind=r8), dimension(:,:), allocatable :: center
+        type(Shell), dimension(:), allocatable :: shell
+        integer, dimension(:), allocatable :: shellIndex
+        integer, dimension(:), allocatable :: atomIndex
     contains
         procedure :: init => init_from_file
         procedure :: destroy => destroy_basis_set
     end type BasisSet
     
-    type BasisFunction
-        integer :: ctr_order ! order of contraction
-        type(Gaussian), dimension(:), allocatable :: gto
-        real(kind=r8), dimension(:), allocatable :: ctr_coeff ! contraction coefficients
-        real(kind=r8), dimension(3) :: center
-        integer :: angl
-    contains
-        final :: destroy_basis_function
-    end type BasisFunction
 
-    type Gaussian
-    ! g = x^lx * y^ly * z^lz * exp(-alpha*(x^2 + y^2 + z^2))
-       real(kind=r8) :: alpha
-       integer :: lx, ly, lz
-       integer :: l ! l = lx + ly + lz
-    end type Gaussian
-
-    type(ShellEnum), parameter, private :: cart_shl = ShellEnum(1,4,3,6,10,15,21,28)
+    !type(ShellEnum), parameter, private :: cart_shl = ShellEnum(1,4,3,6,10,15,21,28)
+    type(ShellEnum), parameter, private :: sph_shl = ShellEnum(1,4,3,5,7,9,11,13)
+    type(ShellEnum), parameter, private :: shl_angl = ShellEnum(0,-1,1,2,3,4,5,6)
 
 contains
     
-    subroutine init_from_file(this, mole, basis_name)
+    subroutine init_from_file(this, mole, filename)
         class(BasisSet), intent(inout) :: this
         class(Molecule), intent(in) :: mole
-        character(len=*), intent(in) :: basis_name
+        character(len=*), intent(in) :: filename
         !===================================================
+        character(len=20) :: basis_name
         integer :: stat
 
+        call load_input_file(filename, stat)
+        call basis_input(basis_name)
+        call close_input_file(stat)
+
         call load_basis_set(basis_name, stat)
+        if (stat == 1) then
+            call error_terminate(OUTPUT_FILE_UNIT, "Open basis file failed.")
+        else if (stat == 2) then
+            call error_terminate(OUTPUT_FILE_UNIT, "Basis set not exist.")
+        end if
 
-        call determine_num_basis(mole, &
-                                 this%num_basis, &
-                                 this%num_shell, &
-                                 this%num_gto, &
-                                 this%max_angl)
-        allocate(this%basis(this%num_basis))
-        allocate(this%shl_idx(this%num_shell))
-        allocate(this%n_bf_in_shl(this%num_shell))
+        call determine_basis_from_file(this, mole)
 
-        call read_gto_for_basis(this, mole)
+        allocate(this%angl(this%numShell))
+        allocate(this%cntrOrder(this%numShell))
+        allocate(this%numCntrBasis(this%numShell))
+        allocate(this%center(3,this%numShell))
+        allocate(this%shell(this%numShell))
+        allocate(this%shellIndex(this%numShell))
+        allocate(this%atomIndex(this%numShell))
+
+        call read_basis_from_file(this, mole)
 
         call close_basis_file(stat)
 
@@ -96,6 +107,7 @@ contains
             end if
 
         end do
+
     end subroutine find_element
 
     function check_shell_def(line, shell_type, ctr_odr) result(res)
@@ -118,27 +130,28 @@ contains
 
     end function check_shell_def
 
-    subroutine determine_num_basis(mole, num_basis, num_shell, num_gto, max_l)
+    subroutine determine_basis_from_file(basis_set, mole)
         ! determine the number of basis functions,
         !           the number of contracted shells,
         !           the number of primitive Gaussian functions,
         !           maximum angular momentum
+        class(BasisSet), intent(inout) :: basis_set
         class(Molecule), intent(in) :: mole
-        integer :: num_basis
-        integer :: num_shell
-        integer :: num_gto
-        integer :: max_l
         !===================================================
         character(len=MAX_LINE_WIDTH) :: line
         character(len=2) :: shell_type
         integer :: ctr_odr, l
         integer :: i, stat
 
-        num_basis = 0; num_shell = 0
-        num_gto = 0; max_l = 0
-        do i = 1, mole%num_atom
+        basis_set%numBasis = 0
+        basis_set%numShell = 0
+        basis_set%numGTO = 0
+        basis_set%numPrimitive = 0
+        basis_set%maxAngl = 0
 
-            call find_element(mole%atom(i), stat)
+        do i = 1, mole%NumAtom
+
+            call find_element(mole%atomSymbol(i), stat)
             if (stat /= 0) stop "element not found"
             read(BASIS_FILE_UNIT, "(A)") line
 
@@ -147,50 +160,54 @@ contains
                 if (index(line, "****") /= 0) exit
 
                 if (check_shell_def(line, shell_type, ctr_odr)) then
-                    num_shell = num_shell + 1
+                    basis_set%numShell = basis_set%numShell + 1
+                    basis_set%numPrimitive = basis_set%numPrimitive + ctr_odr
+
                     select case (shell_type)
                     case('S ')
-                        num_basis = num_basis + cart_shl%s
-                        num_gto = num_gto + ctr_odr * cart_shl%s
+                        basis_set%numBasis = basis_set%numBasis + sph_shl%s
+                        basis_set%numGTO = basis_set%numGTO + ctr_odr * sph_shl%s
                         l = 0
                     case('SP')
-                        num_basis = num_basis + cart_shl%sp
-                        num_gto = num_gto + ctr_odr * cart_shl%sp
+                        basis_set%numShell = basis_set%numShell + 1 ! split up sp shell into s and p
+                        basis_set%numBasis = basis_set%numBasis + sph_shl%sp
+                        basis_set%numGTO = basis_set%numGTO + ctr_odr * sph_shl%sp
+                        basis_set%numPrimitive = basis_set%numPrimitive + ctr_odr
                         l = 1
                     case('P ')
-                        num_basis = num_basis + cart_shl%p
-                        num_gto = num_gto + ctr_odr * cart_shl%p
+                        basis_set%numBasis = basis_set%numBasis + sph_shl%p
+                        basis_set%numGTO = basis_set%numGTO + ctr_odr * sph_shl%p
                         l = 1
                     case('D ')
-                        num_basis = num_basis + cart_shl%d
-                        num_gto = num_gto + ctr_odr * cart_shl%d
+                        basis_set%numBasis = basis_set%numBasis + sph_shl%d
+                        basis_set%numGTO = basis_set%numGTO + ctr_odr * sph_shl%d
                         l = 2
                     case('F ')
-                        num_basis = num_basis + cart_shl%f
-                        num_gto = num_gto + ctr_odr * cart_shl%f
+                        basis_set%numBasis = basis_set%numBasis + sph_shl%f
+                        basis_set%numGTO = basis_set%numGTO + ctr_odr * sph_shl%f
                         l = 3
                     case('G ')
-                        num_basis = num_basis + cart_shl%g
-                        num_gto = num_gto + ctr_odr * cart_shl%g
+                        basis_set%numBasis = basis_set%numBasis + sph_shl%g
+                        basis_set%numGTO = basis_set%numGTO + ctr_odr * sph_shl%g
                         l = 4
                     case('H ')
-                        num_basis = num_basis + cart_shl%h
-                        num_gto = num_gto + ctr_odr * cart_shl%h
+                        basis_set%numBasis = basis_set%numBasis + sph_shl%h
+                        basis_set%numGTO = basis_set%numGTO + ctr_odr * sph_shl%h
                         l = 5
                     case('I ')
-                        num_basis = num_basis + cart_shl%i
-                        num_gto = num_gto + ctr_odr * cart_shl%i
+                        basis_set%numBasis = basis_set%numBasis + sph_shl%i
+                        basis_set%numGTO = basis_set%numGTO + ctr_odr * sph_shl%i
                         l = 6
                     end select
-                    if (l > max_l) max_l = l
+                    if (l > basis_set%maxAngl) basis_set%maxAngl = l
                 end if
             end do
 
         end do
 
-    end subroutine determine_num_basis
+    end subroutine determine_basis_from_file
 
-    subroutine read_gto_for_basis(basis_set, mole)
+    subroutine read_basis_from_file(basis_set, mole)
         ! read basis functions
         !      contraction coefficients
         !      exponents of GTOs
@@ -203,14 +220,14 @@ contains
         character(len=MAX_LINE_WIDTH) :: line
         character(len=2) :: shell_type
         integer :: ctr_odr
-        integer :: i, j, ibasis, ishell
+        integer :: ishell, iatom, iprim
         integer :: stat
 
+        ishell = 0
+        iprim = 1
+        do iatom = 1, mole%NumAtom
 
-        ishell = 0; ibasis = 1
-        do i = 1, mole%num_atom
-
-            call find_element(mole%atom(i), stat)
+            call find_element(mole%atomSymbol(iatom), stat)
             if (stat /= 0) stop "element not find"
             read(BASIS_FILE_UNIT, "(A)") line
 
@@ -221,169 +238,150 @@ contains
                 if (check_shell_def(line, shell_type, ctr_odr)) then
 
                     ishell = ishell + 1
-                    basis_set%shl_idx(ishell) = ibasis
+
                     call read_gto(ctr_odr, shell_type, expnt, coeff)
+                    basis_set%shellIndex(ishell) = iprim
 
                     select case (shell_type)
                     case('S ')
-                        basis_set%n_bf_in_shl(ishell) = cart_shl%s
+                        basis_set%angl(ishell) = shl_angl%s
+                        basis_set%cntrOrder(ishell) = ctr_odr
+                        basis_set%numCntrBasis(ishell) = 1
+                        basis_set%center(:,ishell) = mole%geom(:,iatom)
+                        basis_set%atomIndex(ishell) = iatom
+                        iprim = iprim + sph_shl%s
 
-                        do j = ibasis, ibasis + cart_shl%s - 1
-                            basis_set%basis(j)%center(:) = mole%geom(:,i)
-                            basis_set%basis(j)%ctr_order = ctr_odr
-                            basis_set%basis(j)%angl = 0
+                        basis_set%shell(ishell)%cntrOrder = ctr_odr
+                        allocate(basis_set%shell(ishell)%expnt(ctr_odr))
+                        allocate(basis_set%shell(ishell)%coeff(ctr_odr))
 
-                            allocate(basis_set%basis(j)%gto(ctr_odr))
-                            allocate(basis_set%basis(j)%ctr_coeff(ctr_odr))
-                            
-                            basis_set%basis(j)%gto(:)%alpha = expnt(1:ctr_odr)
-                            basis_set%basis(j)%ctr_coeff(:) = coeff(1:ctr_odr,1)
-                            basis_set%basis(j)%gto(:)%l = 0
+                        basis_set%shell(ishell)%expnt(:) = expnt(1:ctr_odr)
+                        basis_set%shell(ishell)%coeff(:) = coeff(1:ctr_odr,1)
 
-                        end do
-
-                        ibasis = ibasis + cart_shl%s
                     case('SP')
-                        basis_set%n_bf_in_shl(ishell) = cart_shl%sp
+                        ! deal with s
+                        basis_set%angl(ishell) = shl_angl%s
+                        basis_set%cntrOrder(ishell) = ctr_odr
+                        basis_set%numCntrBasis(ishell) = 1
+                        basis_set%center(:,ishell) = mole%geom(:,iatom)
+                        basis_set%atomIndex(ishell) = iatom
+                        iprim = iprim + sph_shl%s
 
-                        block
-                        integer :: tmp
-                        tmp = 1
-                        do j = ibasis, ibasis + cart_shl%sp - 1
-                            basis_set%basis(j)%center(:) = mole%geom(:,i)
-                            basis_set%basis(j)%ctr_order = ctr_odr
-                            if (tmp == 1) then
-                                basis_set%basis(j)%angl = 0
-                            else
-                                basis_set%basis(j)%angl = 1
-                            end if
-                            
-                            allocate(basis_set%basis(j)%gto(ctr_odr))
-                            allocate(basis_set%basis(j)%ctr_coeff(ctr_odr))
+                        basis_set%shell(ishell)%cntrOrder = ctr_odr
+                        allocate(basis_set%shell(ishell)%expnt(ctr_odr))
+                        allocate(basis_set%shell(ishell)%coeff(ctr_odr))
 
-                            basis_set%basis(j)%gto(:)%alpha = expnt(1:ctr_odr)
-                            
-                            if (tmp == 1) then
-                                basis_set%basis(j)%ctr_coeff(:) = coeff(1:ctr_odr,1)
-                                basis_set%basis(j)%gto(:)%l = 0
-                            else
-                                basis_set%basis(j)%ctr_coeff(:) = coeff(1:ctr_odr,2)
-                                basis_set%basis(j)%gto(:)%l = 1
-                            end if
+                        basis_set%shell(ishell)%expnt(:) = expnt(1:ctr_odr)
+                        basis_set%shell(ishell)%coeff(:) = coeff(1:ctr_odr,1)
 
-                            tmp = tmp + 1
-                        end do
-                        end block
+                        ishell = ishell + 1
+                        basis_set%shellIndex(ishell) = iprim
 
-                        ibasis = ibasis + cart_shl%sp
+                        ! deal with p
+                        basis_set%angl(ishell) = shl_angl%p
+                        basis_set%cntrOrder(ishell) = ctr_odr
+                        basis_set%numCntrBasis(ishell) = 1
+                        basis_set%center(:,ishell) = mole%geom(:,iatom)
+                        basis_set%atomIndex(ishell) = iatom
+                        iprim = iprim + sph_shl%p
+
+                        basis_set%shell(ishell)%cntrOrder = ctr_odr
+                        allocate(basis_set%shell(ishell)%expnt(ctr_odr))
+                        allocate(basis_set%shell(ishell)%coeff(ctr_odr))
+
+                        basis_set%shell(ishell)%expnt(:) = expnt(1:ctr_odr)
+                        basis_set%shell(ishell)%coeff(:) = coeff(1:ctr_odr,2)
+
                     case('P ')
-                        basis_set%n_bf_in_shl(ishell) = cart_shl%p
+                        basis_set%angl(ishell) = shl_angl%p
+                        basis_set%cntrOrder(ishell) = ctr_odr
+                        basis_set%numCntrBasis(ishell) = 1
+                        basis_set%center(:,ishell) = mole%geom(:,iatom)
+                        basis_set%atomIndex(ishell) = iatom
+                        iprim = iprim + sph_shl%p
 
-                        do j = ibasis, ibasis + cart_shl%p - 1
-                            basis_set%basis(j)%center(:) = mole%geom(:,i)
-                            basis_set%basis(j)%ctr_order = ctr_odr
-                            basis_set%basis(j)%angl = 1
+                        basis_set%shell(ishell)%cntrOrder = ctr_odr
+                        allocate(basis_set%shell(ishell)%expnt(ctr_odr))
+                        allocate(basis_set%shell(ishell)%coeff(ctr_odr))
 
-                            allocate(basis_set%basis(j)%gto(ctr_odr))
-                            allocate(basis_set%basis(j)%ctr_coeff(ctr_odr))
-                            
-                            basis_set%basis(j)%gto(:)%alpha = expnt(1:ctr_odr)
-                            basis_set%basis(j)%ctr_coeff(:) = coeff(1:ctr_odr,1)
-                            basis_set%basis(j)%gto(:)%l = 1
+                        basis_set%shell(ishell)%expnt(:) = expnt(1:ctr_odr)
+                        basis_set%shell(ishell)%coeff(:) = coeff(1:ctr_odr,1)
 
-                        end do
-
-                        ibasis = ibasis + cart_shl%p
                     case('D ')
-                        basis_set%n_bf_in_shl(ishell) = cart_shl%d
+                        basis_set%angl(ishell) = shl_angl%d
+                        basis_set%cntrOrder(ishell) = ctr_odr
+                        basis_set%numCntrBasis(ishell) = 1
+                        basis_set%center(:,ishell) = mole%geom(:,iatom)
+                        basis_set%atomIndex(ishell) = iatom
+                        iprim = iprim + sph_shl%d
 
-                        do j = ibasis, ibasis + cart_shl%d - 1
-                            basis_set%basis(j)%center(:) = mole%geom(:,i)
-                            basis_set%basis(j)%ctr_order = ctr_odr
-                            basis_set%basis(j)%angl = 2
+                        basis_set%shell(ishell)%cntrOrder = ctr_odr
+                        allocate(basis_set%shell(ishell)%expnt(ctr_odr))
+                        allocate(basis_set%shell(ishell)%coeff(ctr_odr))
 
-                            allocate(basis_set%basis(j)%gto(ctr_odr))
-                            allocate(basis_set%basis(j)%ctr_coeff(ctr_odr))
-                            
-                            basis_set%basis(j)%gto(:)%alpha = expnt(1:ctr_odr)
-                            basis_set%basis(j)%ctr_coeff(:) = coeff(1:ctr_odr,1)
-                            basis_set%basis(j)%gto(:)%l = 2
-                            
-                        end do
+                        basis_set%shell(ishell)%expnt(:) = expnt(1:ctr_odr)
+                        basis_set%shell(ishell)%coeff(:) = coeff(1:ctr_odr,1)
 
-                        ibasis = ibasis + cart_shl%d
                     case('F ')
-                        basis_set%n_bf_in_shl(ishell) = cart_shl%f
+                        basis_set%angl(ishell) = shl_angl%f
+                        basis_set%cntrOrder(ishell) = ctr_odr
+                        basis_set%numCntrBasis(ishell) = 1
+                        basis_set%center(:,ishell) = mole%geom(:,iatom)
+                        basis_set%atomIndex(ishell) = iatom
+                        iprim = iprim + sph_shl%f
 
-                        do j = ibasis, ibasis + cart_shl%f - 1
-                            basis_set%basis(j)%center(:) = mole%geom(:,i)
-                            basis_set%basis(j)%ctr_order = ctr_odr
-                            basis_set%basis(j)%angl = 3
+                        basis_set%shell(ishell)%cntrOrder = ctr_odr
+                        allocate(basis_set%shell(ishell)%expnt(ctr_odr))
+                        allocate(basis_set%shell(ishell)%coeff(ctr_odr))
 
-                            allocate(basis_set%basis(j)%gto(ctr_odr))
-                            allocate(basis_set%basis(j)%ctr_coeff(ctr_odr))
-                            
-                            basis_set%basis(j)%gto(:)%alpha = expnt(1:ctr_odr)
-                            basis_set%basis(j)%ctr_coeff(:) = coeff(1:ctr_odr,1)
-                            basis_set%basis(j)%gto(:)%l = 3
+                        basis_set%shell(ishell)%expnt(:) = expnt(1:ctr_odr)
+                        basis_set%shell(ishell)%coeff(:) = coeff(1:ctr_odr,1)
 
-                        end do
-
-                        ibasis = ibasis + cart_shl%f
                     case('G ')
-                        basis_set%n_bf_in_shl(ishell) = cart_shl%g
+                        basis_set%angl(ishell) = shl_angl%g
+                        basis_set%cntrOrder(ishell) = ctr_odr
+                        basis_set%numCntrBasis(ishell) = 1
+                        basis_set%center(:,ishell) = mole%geom(:,iatom)
+                        basis_set%atomIndex(ishell) = iatom
+                        iprim = iprim + sph_shl%g
 
-                        do j = ibasis, ibasis + cart_shl%g - 1
-                            basis_set%basis(j)%center(:) = mole%geom(:,i)
-                            basis_set%basis(j)%ctr_order = ctr_odr
-                            basis_set%basis(j)%angl = 4
+                        basis_set%shell(ishell)%cntrOrder = ctr_odr
+                        allocate(basis_set%shell(ishell)%expnt(ctr_odr))
+                        allocate(basis_set%shell(ishell)%coeff(ctr_odr))
 
-                            allocate(basis_set%basis(j)%gto(ctr_odr))
-                            allocate(basis_set%basis(j)%ctr_coeff(ctr_odr))
-                            
-                            basis_set%basis(j)%gto(:)%alpha = expnt(1:ctr_odr)
-                            basis_set%basis(j)%ctr_coeff(:) = coeff(1:ctr_odr,1)
-                            basis_set%basis(j)%gto(:)%l = 4
+                        basis_set%shell(ishell)%expnt(:) = expnt(1:ctr_odr)
+                        basis_set%shell(ishell)%coeff(:) = coeff(1:ctr_odr,1)
 
-                        end do
-
-                        ibasis = ibasis + cart_shl%g
                     case('H ')
-                        basis_set%n_bf_in_shl(ishell) = cart_shl%h
+                        basis_set%angl(ishell) = shl_angl%h
+                        basis_set%cntrOrder(ishell) = ctr_odr
+                        basis_set%numCntrBasis(ishell) = 1
+                        basis_set%center(:,ishell) = mole%geom(:,iatom)
+                        basis_set%atomIndex(ishell) = iatom
+                        iprim = iprim + sph_shl%h
 
-                        do j = ibasis, ibasis + cart_shl%h - 1
-                            basis_set%basis(j)%center(:) = mole%geom(:,i)
-                            basis_set%basis(j)%ctr_order = ctr_odr
-                            basis_set%basis(j)%angl = 5
+                        basis_set%shell(ishell)%cntrOrder = ctr_odr
+                        allocate(basis_set%shell(ishell)%expnt(ctr_odr))
+                        allocate(basis_set%shell(ishell)%coeff(ctr_odr))
 
-                            allocate(basis_set%basis(j)%gto(ctr_odr))
-                            allocate(basis_set%basis(j)%ctr_coeff(ctr_odr))
-                            
-                            basis_set%basis(j)%gto(:)%alpha = expnt(1:ctr_odr)
-                            basis_set%basis(j)%ctr_coeff(:) = coeff(1:ctr_odr,1)
-                            basis_set%basis(j)%gto(:)%l = 5
+                        basis_set%shell(ishell)%expnt(:) = expnt(1:ctr_odr)
+                        basis_set%shell(ishell)%coeff(:) = coeff(1:ctr_odr,1)
 
-                        end do
-
-                        ibasis = ibasis + cart_shl%h
                     case('I ')
-                        basis_set%n_bf_in_shl(ishell) = cart_shl%i
+                        basis_set%angl(ishell) = shl_angl%i
+                        basis_set%cntrOrder(ishell) = ctr_odr
+                        basis_set%numCntrBasis(ishell) = 1
+                        basis_set%center(:,ishell) = mole%geom(:,iatom)
+                        basis_set%atomIndex(ishell) = iatom
+                        iprim = iprim + sph_shl%i
 
-                        do j = ibasis, ibasis + cart_shl%i - 1
-                            basis_set%basis(j)%center(:) = mole%geom(:,i)
-                            basis_set%basis(j)%ctr_order = ctr_odr
-                            basis_set%basis(j)%angl = 6
+                        basis_set%shell(ishell)%cntrOrder = ctr_odr
+                        allocate(basis_set%shell(ishell)%expnt(ctr_odr))
+                        allocate(basis_set%shell(ishell)%coeff(ctr_odr))
 
-                            allocate(basis_set%basis(j)%gto(ctr_odr))
-                            allocate(basis_set%basis(j)%ctr_coeff(ctr_odr))
-                            
-                            basis_set%basis(j)%gto(:)%alpha = expnt(1:ctr_odr)
-                            basis_set%basis(j)%ctr_coeff(:) = coeff(1:ctr_odr,1)
-                            basis_set%basis(j)%gto(:)%l = 6
+                        basis_set%shell(ishell)%expnt(:) = expnt(1:ctr_odr)
+                        basis_set%shell(ishell)%coeff(:) = coeff(1:ctr_odr,1)
 
-                        end do
-
-                        ibasis = ibasis + cart_shl%i
                     end select
 
                 end if
@@ -391,7 +389,7 @@ contains
 
         end do
 
-    end subroutine read_gto_for_basis
+    end subroutine read_basis_from_file
 
     subroutine read_gto(ctr_odr, shell_type, expnt, coeff)
         integer, intent(in) :: ctr_odr
@@ -413,21 +411,62 @@ contains
 
     end subroutine read_gto
 
+    subroutine pack_basis_gto(basis_set, expnt, coeff, angl)
+        class(BasisSet), intent(in) :: basis_set
+        real(kind=r8), dimension(:), allocatable :: expnt
+        real(kind=r8), dimension(:), allocatable :: coeff
+        integer, dimension(:), allocatable :: angl
+        !===================================================
+        integer :: ishell, istart, iend
+        
+        allocate(expnt(sum(basis_set%cntrOrder)))
+        allocate(coeff(sum(basis_set%cntrOrder)))
+        allocate(angl(sum(basis_set%cntrOrder)))
+
+        istart = 1
+        do ishell = 1, basis_set%numShell
+            iend = istart + basis_set%cntrOrder(ishell) - 1
+            expnt(istart:iend) = basis_set%shell(ishell)%expnt(:)
+            coeff(istart:iend) = basis_set%shell(ishell)%coeff(:)
+            angl(istart:iend) = basis_set%angl(ishell)
+            istart = istart + basis_set%cntrOrder(ishell)
+        end do
+
+    end subroutine pack_basis_gto
+
+!    subroutine pack_basis_shell(basis_set, idx)
+!        class(BasisSet), intent(in) :: basis_set
+!        integer, dimension(:), allocatable :: idx
+!        !===================================================
+!        integer :: ishell, k
+!
+!        k = 1
+!        do ishell = 1, basis_set%numShell
+!            idx(ishell) = k
+!            k = k + basis_set%cntrOrder(ishell)
+!        end do
+!
+!    end subroutine pack_basis_shell
+
     subroutine destroy_basis_set(this)
         class(BasisSet) :: this
 
-        deallocate(this%basis)
-        deallocate(this%n_bf_in_shl)
-        deallocate(this%shl_idx)
+        deallocate(this%angl)
+        deallocate(this%cntrOrder)
+        deallocate(this%numCntrBasis)
+        deallocate(this%center)
+        deallocate(this%shell)
+        deallocate(this%shellIndex)
+        deallocate(this%atomIndex)
 
     end subroutine destroy_basis_set
 
-    subroutine destroy_basis_function(this)
-        type(BasisFunction) :: this
+    subroutine destroy_shell(this)
+        type(Shell) :: this
 
-        deallocate(this%gto)
-        deallocate(this%ctr_coeff)
+        deallocate(this%expnt)
+        deallocate(this%coeff)
 
-    end subroutine destroy_basis_function
+    end subroutine destroy_shell
 
 end module mod_basis
