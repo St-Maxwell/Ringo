@@ -1,0 +1,4 @@
+build/*
+example/*
+test/tmp/*
+develop_note.md

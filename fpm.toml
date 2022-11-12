@@ -1,0 +1,26 @@
+name = "Ringo"
+version = "0.1.0"
+license = "license"
+author = "St Maxwell"
+maintainer = "st_maxwell@outlook.com"
+copyright = "Copyright 2022, St Maxwell"
+
+[build]
+auto-executables = true
+
+[dev-dependencies]
+test-drive.git = "https://github.com/fortran-lang/test-drive.git"
+
+[[test]]
+name = "mole"
+source-dir = "test/mole"
+main = "test.f90"
+
+[[test]]
+name = "tmp"
+source-dir = "test/tmp"
+main = "test.F90"
+
+[preprocess.cpp]
+suffixes = ["F90"]
+macros = ["DEBUG","PROJECT_ROOT=C:/Users/St_Maxwell/Documents/Ringo"]
