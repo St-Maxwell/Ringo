@@ -37,7 +37,7 @@ contains
         if (c_associated(tmp)) then
             call c_f_character(cpath, path)
         else
-            call set_error(error, os_error(), "Failed to retrieve current directory")
+            call raise_error(error, "Failed to retrieve current directory")
         end if
 
     end subroutine get_current_directory

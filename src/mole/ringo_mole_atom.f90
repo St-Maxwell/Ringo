@@ -31,7 +31,7 @@ contains
     !> "H 0.0 0.0 0.0
     !>  H 0.0 0.0 0.7"
     !> to an array of type(atom) with size 2
-    !> if parsing failed, raise a value_error
+    !> if parsing failed, raise an error
     subroutine format_atoms(str, atoms, error)
         character(len=*), intent(in) :: str
         type(atom_t), dimension(:), allocatable, intent(out) :: atoms
@@ -48,7 +48,7 @@ contains
         do i = 1, size(lines)
             if (len(trim(lines%at(i))) == 0) then
                 ! raise an error
-                call set_error(error, value_error(), "Empty line in coordinate")
+                call raise_error(error, "Empty line in coordinate")
                 error%msg = empty_line_error_msg(lines, i, error%msg)
                 return
             end if
@@ -147,7 +147,7 @@ contains
                     buf = input(token%first:token%last)
                     atomic_num = symbol_to_number(buf)
                     if (atomic_num == -1) then
-                        call set_error(error, value_error(), "Unknown atomic symbol")
+                        call raise_error(error, "Unknown atomic symbol")
                         error%msg = invalid_line_error_msg(input, token%first, token%last, error%msg)
                         return
                     end if
@@ -155,7 +155,7 @@ contains
                     buf = input(token%first:token%last)
                     read (buf, *, iostat=istat) xyz(1)
                     if (istat /= 0) then
-                        call set_error(error, value_error(), "Invalid number in coordinate")
+                        call raise_error(error, "Invalid number in coordinate")
                         error%msg = invalid_line_error_msg(input, token%first, token%last, error%msg)
                         return
                     end if
@@ -163,7 +163,7 @@ contains
                     buf = input(token%first:token%last)
                     read (buf, *, iostat=istat) xyz(2)
                     if (istat /= 0) then
-                        call set_error(error, value_error(), "Invalid number in coordinate")
+                        call raise_error(error, "Invalid number in coordinate")
                         error%msg = invalid_line_error_msg(input, token%first, token%last, error%msg)
                         return
                     end if
@@ -171,26 +171,26 @@ contains
                     buf = input(token%first:token%last)
                     read (buf, *, iostat=istat) xyz(3)
                     if (istat /= 0) then
-                        call set_error(error, value_error(), "Invalid number in coordinate")
+                        call raise_error(error, "Invalid number in coordinate")
                         error%msg = invalid_line_error_msg(input, token%first, token%last, error%msg)
                         return
                     end if
                 case default
-                    call set_error(error, value_error(), "Unexpected characters in coordinate")
+                    call raise_error(error, "Unexpected characters in coordinate")
                     error%msg = invalid_line_error_msg(input, token%first, token%last, error%msg)
                     return
                 end select
             case (space)
                 continue
             case default
-                call set_error(error, value_error(), "Unexpected characters in coordinate")
+                call raise_error(error, "Unexpected characters in coordinate")
                 error%msg = invalid_line_error_msg(input, token%first, token%last, error%msg)
                 return
             end select
         end do
 
         if (count /= 4) then
-            call set_error(error, value_error(), "Invalid coordinate")
+            call raise_error(error, "Invalid coordinate")
             error%msg = invalid_line_error_msg(input, len(input), len(input), error%msg)
         end if
 

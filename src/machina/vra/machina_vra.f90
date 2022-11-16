@@ -1,7 +1,5 @@
 module machina_vra
     use machina_vra_char
     implicit none
-
-contains
-
+    public :: vra_char, size
 end module machina_vra

@@ -315,7 +315,7 @@ contains
             return
         end if
 
-        call set_error(error, out_of_range_error(), trim(adjustl(key))//" not found.")
+        call raise_error(error, trim(adjustl(key))//" not found.")
 
     end subroutine get_i4
 
@@ -344,7 +344,7 @@ contains
             return
         end if
 
-        call set_error(error, out_of_range_error(), trim(adjustl(key))//" not found.")
+        call raise_error(error, trim(adjustl(key))//" not found.")
 
     end subroutine get_i8
 
@@ -373,7 +373,7 @@ contains
             return
         end if
 
-        call set_error(error, out_of_range_error(), trim(adjustl(key))//" not found.")
+        call raise_error(error, trim(adjustl(key))//" not found.")
 
     end subroutine get_f4
 
@@ -402,7 +402,7 @@ contains
             return
         end if
 
-        call set_error(error, out_of_range_error(), trim(adjustl(key))//" not found.")
+        call raise_error(error, trim(adjustl(key))//" not found.")
 
     end subroutine get_f8
 
@@ -431,7 +431,7 @@ contains
             return
         end if
 
-        call set_error(error, out_of_range_error(), trim(adjustl(key))//" not found.")
+        call raise_error(error, trim(adjustl(key))//" not found.")
 
     end subroutine get_f16
 
@@ -460,7 +460,7 @@ contains
             return
         end if
 
-        call set_error(error, out_of_range_error(), trim(adjustl(key))//" not found.")
+        call raise_error(error, trim(adjustl(key))//" not found.")
 
     end subroutine get_c8
 
@@ -489,7 +489,7 @@ contains
             return
         end if
 
-        call set_error(error, out_of_range_error(), trim(adjustl(key))//" not found.")
+        call raise_error(error, trim(adjustl(key))//" not found.")
 
     end subroutine get_c16
 
@@ -518,7 +518,7 @@ contains
             return
         end if
 
-        call set_error(error, out_of_range_error(), trim(adjustl(key))//" not found.")
+        call raise_error(error, trim(adjustl(key))//" not found.")
 
     end subroutine get_char
 
@@ -547,7 +547,7 @@ contains
             return
         end if
 
-        call set_error(error, out_of_range_error(), trim(adjustl(key))//" not found.")
+        call raise_error(error, trim(adjustl(key))//" not found.")
 
     end subroutine get_bool
 

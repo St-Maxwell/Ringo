@@ -73,7 +73,7 @@ contains
                     if (.has.error) return
                     basis = [basis, basis_set_t(atom, shls)]
                 class default
-                    call set_error(error, logic_error(), "Invalid basis set name")
+                    call raise_error(error, "Invalid basis set name")
                     return
                 end select
 
@@ -166,14 +166,14 @@ contains
             read (line, *, iostat=istat) num_contract, symb
 
             if (istat /= 0) then
-                call set_error(error, value_error(), &
-                               "Invalid basis set definition in"//LF//"  | "//lines%at(i))
+                call raise_error(error, &
+                                 "Invalid basis set definition in"//LF//"  | "//lines%at(i))
                 return
             end if
 
             if (scan(symb, "spdfghi") == 0) then
-                call set_error(error, value_error(), &
-                               "Unsupported shell type"//LF//"  | "//lines%at(i))
+                call raise_error(error, &
+                                 "Unsupported shell type"//LF//"  | "//lines%at(i))
                 return
             end if
             l = symb_to_l(symb)
@@ -186,8 +186,8 @@ contains
                 read (line, *, iostat=istat) expn(j), coeff(j)
 
                 if (istat /= 0) then
-                    call set_error(error, value_error(), &
-                                   "Invalid basis set definition in"//LF//"  | "//lines%at(j))
+                    call raise_error(error, &
+                                     "Invalid basis set definition in"//LF//"  | "//lines%at(j))
                     return
                 end if
             end do
