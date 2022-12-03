@@ -10,9 +10,10 @@
 
 module ringo_mole_basis
     use machina_basic
+    use machina_core
     use machina_string
     use machina_map
-    use machina_vra
+    use machina_vla
     use machina_error
     implicit none
     private
@@ -54,7 +55,7 @@ contains
         iterate: block
             type(map_iterator) :: it
             character(len=:), allocatable :: atom
-            class(*), allocatable :: v
+            class(machina_value), pointer :: vptr
             type(basis_set_t) :: newbasis
             type(basis_set_shell), dimension(:), allocatable :: shls
             logical :: next
@@ -64,11 +65,11 @@ contains
             do
                 next = it%has_next()
                 if (.not. next) exit
-                call it%next_pair(atom, v)
+                call it%next_pair(atom, vptr)
 
-                select type (basname => v)
-                type is (character(len=*))
-                    call load_basis(shls, basis_dir//basis_file_name(basname), &
+                select type (vptr)
+                type is (char_value)
+                    call load_basis(shls, basis_dir//basis_file_name(vptr%raw), &
                                     to_lower(atom), error)
                     if (.has.error) return
                     basis = [basis, basis_set_t(atom, shls)]
@@ -145,7 +146,7 @@ contains
         type(basis_set_shell), dimension(:), allocatable, intent(out) :: bas_shls
         type(error_t), intent(out) :: error
         !local
-        type(vra_char) :: lines
+        type(vla_char) :: lines
         character(len=:), allocatable :: line
         integer :: num_contract
         character(len=1) :: symb

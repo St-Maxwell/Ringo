@@ -1,7 +1,7 @@
 module ringo_mole_atom
     use machina_basic, only: f8
     use machina_string
-    use machina_vra
+    use machina_vla
     use machina_error
     use machina_assert
     use ringo_elements
@@ -37,7 +37,7 @@ contains
         type(atom_t), dimension(:), allocatable, intent(out) :: atoms
         type(error_t), intent(out) :: error
         ! local
-        type(vra_char) :: lines
+        type(vla_char) :: lines
         integer :: atomic_number
         real(kind=f8), dimension(3) :: xyz
         integer :: i
@@ -69,7 +69,7 @@ contains
     contains
 
         function empty_line_error_msg(lines, pos, msg) result(s)
-            type(vra_char), intent(in) :: lines
+            type(vla_char), intent(in) :: lines
             integer, intent(in) :: pos
             character(len=*), intent(in) :: msg
             character(len=:), allocatable :: s

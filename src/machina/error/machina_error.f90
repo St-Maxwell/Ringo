@@ -2,6 +2,7 @@ module machina_error
     implicit none
     private
     public :: error_t, raise_error, operator(.has.)
+    public :: not_found_error
 
     !> handles run time errors
     type :: error_t
@@ -37,5 +38,15 @@ contains
         has_error = allocated(error%msg)
 
     end function has_error
+
+!> common error message
+
+    function not_found_error(name) result(msg)
+        character(len=*), intent(in) :: name
+        character(len=:), allocatable :: msg
+
+        msg = """"//name//""" not found"
+
+    end function not_found_error
 
 end module machina_error

@@ -1,6 +1,5 @@
 module machina_string_utils
     use machina_basic
-    use machina_assert
     use machina_string_ascii
     implicit none
 
@@ -20,9 +19,9 @@ contains
     end subroutine replace
 
     subroutine tokenize(string, tokens, sep)
-        use machina_vra, only: vra_char
+        use machina_vla, only: vla_char
         character(len=*), intent(in) :: string
-        type(vra_char), intent(out) :: tokens
+        type(vla_char), intent(out) :: tokens
         character(len=*), intent(in), optional :: sep
         character(len=:), allocatable :: sep_
         integer :: pos, lastpos

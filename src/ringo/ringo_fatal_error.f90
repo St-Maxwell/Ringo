@@ -1,5 +1,5 @@
 module ringo_fatal_error
-    use iso_fortran_env, only: error_unit
+    use ringo_io_system, only: std_err
     implicit none
     private
     public :: ringo_crash
@@ -9,7 +9,7 @@ contains
     subroutine ringo_crash(msg)
         character(len=*), intent(in) :: msg
 
-        write (error_unit, "('[RINGO FATAL ERROR] ',A)") msg
+        write (std_err, "('[RINGO FATAL ERROR] ',A)") msg
         error stop
 
     end subroutine ringo_crash
