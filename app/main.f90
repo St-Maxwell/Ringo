@@ -1,6 +1,7 @@
 program main
     use ringo_cli
-    use ringo_fatal_error
+    use ringo_born
+    use ringo_dead
     use machina_error
     implicit none
     type(cli_t) :: args
@@ -11,8 +12,11 @@ program main
         call ringo_crash(error%msg)
     end if
 
-    print*, args%input
-    print*, args%output
-    print*, args%num_thread
- 
+    call ringo_launch(args%input, args%output, args%num_thread, error)
+    if (.has.error) then
+        call ringo_crash(error%msg)
+    end if
+
+    call ringo_terminate()
+
 end program main

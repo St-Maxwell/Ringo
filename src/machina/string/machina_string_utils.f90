@@ -1,6 +1,7 @@
 module machina_string_utils
     use machina_basic
     use machina_string_ascii
+    use machina_error
     implicit none
 
 contains
@@ -172,5 +173,59 @@ contains
         is_all_digit = .true.
 
     end function is_all_digit
+
+    subroutine read_whole_file(file, string, error)
+        character(len=*), intent(in) :: file
+        character(len=:), allocatable, intent(out) :: string
+        type(error_t), intent(out) :: error
+        integer :: u, length, istat
+
+        open (newunit=u, file=file, action="read", status="old", access="stream", &
+              position="append", iostat=istat) ! place the cursor at the end of file
+
+        if (istat /= 0) then
+            call raise_error(error, "Unable to open the file """//trim(file)//"""")
+            return
+        end if
+
+        inquire (unit=u, pos=length)
+        allocate (character(len=length - 1) :: string, stat=istat)
+
+        if (istat /= 0) then
+            call raise_error(error, "Allocation failed")
+            close (u)
+            return
+        end if
+
+        read (u, pos=1, iostat=istat) string
+
+        if (istat /= 0) then
+            call raise_error(error, "Could not read the file """//trim(file)//"""")
+            close (u)
+            return
+        end if
+
+        close (u)
+
+    end subroutine read_whole_file
+
+    subroutine read_whole_line(unit, string, error)
+        integer, intent(in) :: unit
+        character(len=:), allocatable, intent(out) :: string
+        type(error_t), intent(out) :: error
+        character(len=1000) :: buffer
+        integer :: chunk, istat
+
+        string = ""
+        do while (istat == 0)
+            read (unit, "(A)", advance="no", iostat=istat, size=chunk) buffer
+            if (istat > 0) exit
+            string = string//buffer(:chunk)
+        end do
+
+        if (.not. is_iostat_eor(istat)) &
+            call raise_error(error, "Error occurs when reading the line")
+
+    end subroutine read_whole_line
 
 end module machina_string_utils
