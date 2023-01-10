@@ -178,27 +178,23 @@ contains
         character(len=*), intent(in) :: file
         character(len=:), allocatable, intent(out) :: string
         type(error_t), intent(out) :: error
+        character(len=:), allocatable :: line
         integer :: u, length, istat
 
-        open (newunit=u, file=file, action="read", status="old", access="stream", &
-              position="append", iostat=istat) ! place the cursor at the end of file
+        open (newunit=u, file=file, action="read", status="old", iostat=istat)
 
         if (istat /= 0) then
             call raise_error(error, "Unable to open the file """//trim(file)//"""")
             return
         end if
 
-        inquire (unit=u, pos=length)
-        allocate (character(len=length - 1) :: string, stat=istat)
+        string = ""
+        do while (istat == 0)
+            call getline(u, line, istat)
+            if (istat == 0) string = string//line//LF
+        end do
 
-        if (istat /= 0) then
-            call raise_error(error, "Allocation failed")
-            close (u)
-            return
-        end if
-
-        read (u, pos=1, iostat=istat) string
-
+        if (is_iostat_end(istat)) istat = 0
         if (istat /= 0) then
             call raise_error(error, "Could not read the file """//trim(file)//"""")
             close (u)
@@ -209,23 +205,39 @@ contains
 
     end subroutine read_whole_file
 
-    subroutine read_whole_line(unit, string, error)
+    subroutine getline(unit, line, iostat)
+        !> Formatted IO unit
         integer, intent(in) :: unit
-        character(len=:), allocatable, intent(out) :: string
-        type(error_t), intent(out) :: error
-        character(len=1000) :: buffer
-        integer :: chunk, istat
+        !> Line to read
+        character(len=:), allocatable, intent(out) :: line
+        !> Status of operation
+        integer, intent(out) :: iostat
 
-        string = ""
-        do while (istat == 0)
-            read (unit, "(A)", advance="no", iostat=istat, size=chunk) buffer
-            if (istat > 0) exit
-            string = string//buffer(:chunk)
+        integer, parameter :: bufsize = 4096
+        character(len=bufsize) :: buffer
+        integer :: chunk, stat
+        logical :: opened
+
+        if (unit /= -1) then
+            inquire (unit=unit, opened=opened)
+        else
+            opened = .false.
+        end if
+
+        if (opened) then
+            open (unit=unit, pad="yes", iostat=iostat)
+        else
+            iostat = 1
+        end if
+
+        line = ""
+        do while (iostat == 0)
+            read (unit, '(a)', advance='no', iostat=iostat, size=chunk) buffer
+            if (iostat > 0) exit
+            line = line//buffer(:chunk)
         end do
+        if (is_iostat_eor(iostat)) iostat = 0
 
-        if (.not. is_iostat_eor(istat)) &
-            call raise_error(error, "Error occurs when reading the line")
-
-    end subroutine read_whole_line
+    end subroutine getline
 
 end module machina_string_utils

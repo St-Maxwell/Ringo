@@ -1,5 +1,6 @@
 module ringo_env
     use iso_fortran_env, only: output_unit, error_unit
+    use ringo_input_sections, only: section_t
     use machina_string, only: LF, read_whole_file
     use machina_timer, only: timer_t
     use machina_error
@@ -7,7 +8,7 @@ module ringo_env
     private
     public :: ringo_version, ringo_welcome
     public :: std_out, std_err
-    public :: load_input_file, input_file
+    public :: load_input_file, raw_input_file, sections
     public :: open_std_output, close_std_output
     public :: set_num_threads, num_threads
     public :: ringo_clock
@@ -37,7 +38,9 @@ module ringo_env
     integer, protected :: std_err = error_unit
 
     !> buffer of input file
-    character(len=:), allocatable, protected :: input_file
+    character(len=:), allocatable, protected :: raw_input_file
+    !> sections in input file
+    type(section_t), dimension(:), allocatable :: sections
 
     !> number of threads for OpenMP parallel
     integer, protected :: num_threads = 1
@@ -52,7 +55,7 @@ contains
         character(len=*), intent(in) :: file
         type(error_t), intent(out) :: error
 
-        call read_whole_file(file, input_file, error)
+        call read_whole_file(file, raw_input_file, error)
 
     end subroutine load_input_file
 
@@ -70,6 +73,7 @@ contains
         end if
 
         std_out = u
+        std_err = u
 
     end subroutine open_std_output
 

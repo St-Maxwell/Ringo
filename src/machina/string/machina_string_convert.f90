@@ -4,9 +4,10 @@ module machina_string_convert
                    real64_to_string => d2shortest, &
                    real64_to_string_fixed => d2fixed
     use machina_error
+    use machina_string_utils, only: to_lower
     implicit none
     private
-    public :: string_to_int, string_to_real
+    public :: string_to_int, string_to_real, string_to_bool
     public :: to_string
 
     interface string_to_int
@@ -27,6 +28,11 @@ module machina_string_convert
         module procedure :: string_to_real64_with_error
         module procedure :: string_to_real128
         module procedure :: string_to_real128_with_error
+    end interface
+
+    interface string_to_bool
+        module procedure :: string_to_bool
+        module procedure :: string_to_bool_with_error
     end interface
 
     interface to_string
@@ -172,13 +178,44 @@ contains
 
     end subroutine string_to_real128_with_error
 
+    subroutine string_to_bool(string, v)
+        character(len=*), intent(in) :: string
+        logical, intent(out) :: v
+
+        select case (to_lower(string))
+        case ('t', 'true')
+            v = .true.
+        case ('f', 'false')
+            v = .false.
+        case default
+            error stop
+        end select
+
+    end subroutine string_to_bool
+
+    subroutine string_to_bool_with_error(string, v, error)
+        character(len=*), intent(in) :: string
+        logical, intent(out) :: v
+        type(error_t), intent(out) :: error
+
+        select case (to_lower(string))
+        case ('t', 'true')
+            v = .true.
+        case ('f', 'false')
+            v = .false.
+        case default
+            call raise_error(error, "Can not convert """//string//""" to bool")
+        end select
+
+    end subroutine string_to_bool_with_error
+
     !> int32 to string
     pure function int32_to_string(int) result(str)
         integer(kind=int32), value :: int
         character(len=:), allocatable :: str
         character(len=range(int) + 2) :: buffer
         character(len=1), dimension(0:*), parameter :: digits = &
-            ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+                                                       ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
         integer :: n
         logical :: has_sign
         integer :: pos
@@ -214,7 +251,7 @@ contains
         character(len=:), allocatable :: str
         character(len=range(int) + 2) :: buffer
         character(len=1), dimension(0:*), parameter :: digits = &
-            ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+                                                       ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
         integer :: n
         logical :: has_sign
         integer :: pos

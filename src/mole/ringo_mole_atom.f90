@@ -1,7 +1,7 @@
 module ringo_mole_atom
     use machina_basic, only: f8
     use machina_string
-    use machina_vla
+    use machina_vla, only: vla_char, size
     use machina_error
     use machina_assert
     use ringo_elements
