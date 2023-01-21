@@ -27,7 +27,7 @@ contains
         type(vla_char) :: lines
         character(len=:), allocatable :: buf, name
         logical :: in_section ! if a $IDENTIFIER has been matched
-        integer :: i
+        integer :: i, j
 
         sections = [section_t ::]
 
@@ -53,11 +53,18 @@ contains
                     if (name == "end") then
                         if (in_section) then
                             section%content = buf(2:) ! remove the first LF character
+                            ! check if is duplicate
+                            do j = 1, size(sections)
+                                if (sections(j)%name == section%name) then
+                                    call raise_error(error, "Found duplicate section $"//section%name)
+                                    return
+                                end if
+                            end do
                             sections = [sections, section]
                             in_section = .false.
                         else
                             call raise_error(error, "Unexpected $end in"//LF// &
-                                             "  | "//lines%at(i)//"     <---")
+                                                  & "  | "//lines%at(i)//"     <---")
                             return
                         end if
                     else
@@ -73,7 +80,7 @@ contains
                     buf = buf//LF//lines%at(i)
                 else
                     call raise_error(error, "Invalid line in"//LF// &
-                                     "  | "//lines%at(i)//"     <---")
+                                          & "  | "//lines%at(i)//"     <---")
                     return
                 end if
             end block scan_lines

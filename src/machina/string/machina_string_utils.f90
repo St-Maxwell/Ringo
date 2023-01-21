@@ -19,6 +19,8 @@ contains
 
     end subroutine replace
 
+    !> split the string based on seperator characters
+    !> the default seperator is " "
     subroutine tokenize(string, tokens, sep)
         use machina_vla, only: vla_char
         character(len=*), intent(in) :: string

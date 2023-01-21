@@ -9,6 +9,7 @@
 #endif
 
 module ringo_mole_basis
+    use ringo_env
     use machina_basic
     use machina_core
     use machina_string
@@ -17,7 +18,7 @@ module ringo_mole_basis
     use machina_error
     implicit none
     private
-    public :: basis_set_t, format_basis_set
+    public :: basis_set_t, basis_set_shell, format_basis_set
 
     character(len=*), parameter :: basis_dir = STRINGIFY_START(PROJECT_ROOT)
     STRINGIFY_END(PROJECT_ROOT) &
@@ -54,13 +55,13 @@ contains
 
         iterate: block
             type(map_iterator) :: it
-            character(len=:), allocatable :: atom
+            character(len=:), allocatable :: atom, bas_file
             class(machina_value), pointer :: vptr
             type(basis_set_t) :: newbasis
             type(basis_set_shell), dimension(:), allocatable :: shls
             logical :: next
 
-            allocate (basis(0))
+            basis = [basis_set_t ::]
             it = bas_map%iterator()
             do
                 next = it%has_next()
@@ -69,8 +70,10 @@ contains
 
                 select type (vptr)
                 type is (char_value)
-                    call load_basis(shls, basis_dir//basis_file_name(vptr%raw), &
-                                    to_lower(atom), error)
+                    bas_file = basis_dir//basis_file_name(vptr%raw)
+                    write(std_out,"('Atom: ',A,'  Basis set: ',A)") atom, vptr%raw
+                    write(std_out,"(' in file ',A)") bas_file
+                    call load_basis(shls, bas_file, to_lower(atom), error)
                     if (.has.error) return
                     basis = [basis, basis_set_t(atom, shls)]
                 class default

@@ -17,11 +17,12 @@ module machina_vla_char
         integer :: sz = 0
         type(vla_node), dimension(:), allocatable :: lst
     contains
-        procedure :: push_back_v, push_back_arr
-        generic :: push_back => push_back_v, push_back_arr
+        procedure :: push_back_v, push_back_arr, push_back_vla
+        generic :: push_back => push_back_v, push_back_arr, push_back_vla
         procedure :: pop
         procedure :: shift
         procedure :: at
+        procedure :: ptr_at
         procedure :: iterator, const_iterator
         procedure :: destroy
     end type
@@ -92,6 +93,27 @@ contains
 
     end subroutine push_back_arr
 
+    subroutine push_back_vla(this, vla)
+        class(vla_char), intent(inout) :: this
+        type(vla_char), intent(in) :: vla
+        integer :: sz, i
+
+        if (.not. allocated(this%lst)) then
+            call resize(this%lst, initial_size)
+        end if
+
+        sz = size(this%lst)
+        if (this%sz + size(vla) >= sz) then
+            call resize(this%lst, sz + sz/2 + size(vla))
+        end if
+
+        do i = 1, size(vla)
+            this%lst(i + this%sz)%val = vla%ptr_at(i)
+        end do
+        this%sz = this%sz + size(vla)
+
+    end subroutine push_back_vla
+
     subroutine pop(this, v)
         class(vla_char), intent(inout) :: this
         character(len=:), allocatable, intent(out) :: v
@@ -122,6 +144,15 @@ contains
         v = this%lst(idx)%val
 
     end function at
+
+    function ptr_at(this, idx) result(v)
+        class(vla_char), intent(in), target :: this
+        integer, intent(in) :: idx
+        character(len=:), pointer :: v
+
+        v => this%lst(idx)%val
+
+    end function ptr_at
 
     pure function vla_size(this) result(sz)
         type(vla_char), intent(in) :: this

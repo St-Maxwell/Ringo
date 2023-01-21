@@ -1,6 +1,6 @@
 module ringo_elements
     use machina_basic
-    use machina_string, only: to_upper
+    use machina_string, only: to_lower
     implicit none
 
     integer, parameter :: num_supported_elements = 36
@@ -12,12 +12,12 @@ module ringo_elements
      'Na','Mg',                                                  'Al','Si','P ','S ','Cl','Ar', & ! 11-18
      'K ','Ca','Sc','Ti','V ','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr']   ! 19-36
 
-    character(len=2), parameter :: element_list_upper(0:num_supported_elements) = &
-    ['BQ',                                                                                      & ! 0
-     'H ',                                                                                'HE', & ! 1-2
-     'LI','BE',                                                  'B ','C ','N ','O ','F ','NE', & ! 3-10
-     'NA','MG',                                                  'AL','SI','P ','S ','CL','AR', & ! 11-18
-     'K ','CA','SC','TI','V ','CR','MN','FE','CO','NI','CU','ZN','GA','GE','AS','SE','BR','KR']   ! 19-36
+    character(len=2), parameter :: element_list_lower(0:num_supported_elements) = &
+    ['bq',                                                                                      & ! 0
+     'h ',                                                                                'he', & ! 1-2
+     'li','be',                                                  'b ','c ','n ','o ','f ','ne', & ! 3-10
+     'na','mg',                                                  'al','si','p ','s ','cl','ar', & ! 11-18
+     'k ','ca','sc','ti','v ','cr','mn','fe','co','ni','cu','zn','ga','ge','as','se','br','kr']   ! 19-36
 
      real(kind=f8), parameter :: element_weight(0:num_supported_elements) = &
     [0._f8, & ! 0
@@ -36,7 +36,7 @@ contains
         character(len=*), intent(in) :: symbol
         integer :: num
 
-        num = findloc(element_list_upper, to_upper(symbol), dim=1) - 1
+        num = findloc(element_list_lower, to_lower(symbol), dim=1) - 1
 
     end function symbol_to_number
 

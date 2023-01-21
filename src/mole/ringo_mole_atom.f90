@@ -32,8 +32,8 @@ contains
     !>  H 0.0 0.0 0.7"
     !> to an array of type(atom) with size 2
     !> if parsing failed, raise an error
-    subroutine format_atoms(str, atoms, error)
-        character(len=*), intent(in) :: str
+    subroutine format_atoms(string, atoms, error)
+        character(len=*), intent(in) :: string
         type(atom_t), dimension(:), allocatable, intent(out) :: atoms
         type(error_t), intent(out) :: error
         ! local
@@ -42,8 +42,8 @@ contains
         real(kind=f8), dimension(3) :: xyz
         integer :: i
 
-        ! split str by line
-        call tokenize(str, lines, sep=LF)
+        ! split string by line
+        call tokenize(string, lines, sep=LF)
         ! check if empty line exists
         do i = 1, size(lines)
             if (len(trim(lines%at(i))) == 0) then
@@ -128,11 +128,11 @@ contains
             enumerator :: invalid, space, string
         end enum
 
-        type :: token_type
+        type :: token_t
             integer :: first, last, kind
-        end type token_type
+        end type token_t
 
-        type(token_type) :: token
+        type(token_t) :: token
         character(len=:), allocatable :: msg
 
         count = 0
@@ -202,7 +202,7 @@ contains
             !> Offset in input string, will be advanced
             integer, intent(inout) :: pos
             !> Returned token from the next position
-            type(token_type), intent(out) :: token
+            type(token_t), intent(out) :: token
 
             pos = pos + 1
             select case (input(pos:pos))
@@ -224,9 +224,9 @@ contains
                 end do
                 token%kind = string
             case (' ', TAB)
-                token = token_type(pos, pos, space)
+                token = token_t(pos, pos, space)
             case default
-                token = token_type(pos, pos, invalid)
+                token = token_t(pos, pos, invalid)
             end select
 
         end subroutine get_token

@@ -17,7 +17,7 @@ contains
 
         !> stop timing
         call ringo_clock%stop()
-        write (std_out, "(/,'Total Run Time: ',A)") &
+        write (std_out, "('Total Run Time: ',A)") &
             format_time(ringo_clock%get_elapsed_time())
 
         write (std_out, "('Ringo Normal Termination on: ',A)") get_date_time()
