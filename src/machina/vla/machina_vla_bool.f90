@@ -3,7 +3,8 @@ module machina_vla_bool
     use machina_value_base
     implicit none
     private
-    public :: vla_bool, vla_bool_iterator, vla_bool_const_iterator, size
+    public :: vla_bool, vla_bool_iterator, vla_bool_const_iterator
+    public :: size, copy_to_array
     public :: cast_to_vla_bool
 
     integer, parameter :: initial_size = 16
@@ -45,6 +46,10 @@ module machina_vla_bool
 
     interface size
         module procedure :: vla_size
+    end interface
+
+    interface copy_to_array
+        module procedure :: copy_to_array_bool
     end interface
 
 contains
@@ -157,6 +162,18 @@ contains
         sz = this%sz
 
     end function vla_size
+
+    subroutine copy_to_array_bool(this, array)
+        type(vla_bool), intent(in) :: this
+        logical, dimension(:), allocatable, intent(out) :: array
+        integer :: i
+
+        allocate (array(size(this)))
+        do i = 1, size(this)
+            array(i) = this%ptr_at(i)
+        end do
+
+    end subroutine copy_to_array_bool
 
     function iterator(this, reverse) result(it)
         class(vla_bool), intent(in), target :: this

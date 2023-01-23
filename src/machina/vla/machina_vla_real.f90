@@ -4,7 +4,8 @@ module machina_vla_real
     use machina_value_base
     implicit none
     private
-    public :: vla_real, vla_real_iterator, vla_real_const_iterator, size
+    public :: vla_real, vla_real_iterator, vla_real_const_iterator
+    public :: size, copy_to_array
     public :: cast_to_vla_real
 
     integer, parameter :: initial_size = 16
@@ -46,6 +47,10 @@ module machina_vla_real
 
     interface size
         module procedure :: vla_size
+    end interface
+
+    interface copy_to_array
+        module procedure :: copy_to_array_real
     end interface
 
 contains
@@ -158,6 +163,18 @@ contains
         sz = this%sz
 
     end function vla_size
+
+    subroutine copy_to_array_real(this, array)
+        type(vla_real), intent(in) :: this
+        real(kind=f8), dimension(:), allocatable, intent(out) :: array
+        integer :: i
+
+        allocate (array(size(this)))
+        do i = 1, size(this)
+            array(i) = this%ptr_at(i)
+        end do
+
+    end subroutine copy_to_array_real
 
     function iterator(this, reverse) result(it)
         class(vla_real), intent(in), target :: this

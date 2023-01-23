@@ -5,6 +5,7 @@ module ringo_mole_atom
     use machina_error
     use machina_assert
     use ringo_elements
+    use ringo_phys_const, only: bohr_to_angstrom
     implicit none
     private
     public :: atom_t, format_atoms
@@ -20,7 +21,7 @@ module ringo_mole_atom
         real(kind=f8) :: c
         !> weight of the atom, in atomic unit
         real(kind=f8) :: w
-        !> cartesian coordinate of the atom
+        !> cartesian coordinate of the atom, in a.u.
         real(kind=f8), dimension(3) :: xyz
     end type
 
@@ -61,7 +62,8 @@ contains
                 type(atom_t) :: newatom
                 call parse_line(lines%at(i), atomic_number, xyz, error)
                 if (.has.error) return
-                call construct_atom(newatom, atomic_number, xyz)
+                ! convert to atomic unit
+                call construct_atom(newatom, atomic_number, xyz/bohr_to_angstrom)
                 atoms = [atoms, newatom]
             end block append_atom
         end do

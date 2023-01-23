@@ -6,11 +6,13 @@ module ringo_mole_detail
     use machina_map
     use machina_set
     use machina_error
+    use machina_assert
     use ringo_env
+    use ringo_phys_const, only: bohr_to_angstrom
     use ringo_mole_atom
     use ringo_mole_basis
     use ringo_elements
-    use ringo_libcint
+    use ringo_cint
     use ringo_log_utils
     implicit none
     private
@@ -31,8 +33,8 @@ module ringo_mole_detail
         integer :: nalpha = 0
         integer :: nbeta = 0
         !> libcint arrays
-        integer(kind=i4), dimension(:, :), allocatable :: atm
-        integer(kind=i4), dimension(:, :), allocatable :: bas
+        integer(kind=i4), dimension(:), allocatable :: atm
+        integer(kind=i4), dimension(:), allocatable :: bas
         real(kind=f8), dimension(:), allocatable :: env
         !> if a mole_t instance is ready to be used
         logical :: built = .false.
@@ -42,6 +44,7 @@ module ringo_mole_detail
         generic :: set_basis_set => set_basis_set_string, set_basis_set_map
         procedure :: print_geometry
         procedure :: build
+        procedure :: get_int1e
     end type
 
 contains
@@ -123,7 +126,8 @@ contains
         type(error_t), intent(out) :: error
 
         call make_env(this, error)
-        !allocate(this%bas(BAS_SLOTS))
+
+        this%built = .true.
 
     end subroutine build
 
@@ -165,24 +169,9 @@ contains
             end do
         end block assign_bas_for_atoms
 
-        call print_header("atm", std_out)
-        do i = 1, size(atm)
-            write (std_out, "(2I5)") i, atm%at(i)
-        end do
-        write (std_out, "(A)")
-
-        call print_header("env", std_out)
-        do i = 1, size(env)
-            write (std_out, "(I5,F20.10)") i, env%at(i)
-        end do
-        write (std_out, "(A)")
-
-        call print_header("bas", std_out)
-        do i = 1, size(bas)
-            write (std_out, "(2I5)") i, bas%at(i)
-            if (mod(i, 8) == 0) write (std_out,"(A)") repeat('-',10)
-        end do
-        write (std_out, "(A)")
+        call copy_to_array(atm, this%atm)
+        call copy_to_array(bas, this%bas)
+        call copy_to_array(env, this%env)
 
     end subroutine make_env
 
@@ -262,19 +251,42 @@ contains
 
     end subroutine make_bas_env
 
+    subroutine get_int1e(this, int, mat)
+        class(mole_t), intent(in) :: this
+        character(len=*), intent(in) :: int
+        real(kind=f8), dimension(:, :), allocatable, intent(out) :: mat
+
+        allocate (mat(nao(this%bas), nao(this%bas)))
+        select case (trim(int))
+        case ("ovlp")
+            call calc_ovlp_int(mat, this%atm, this%bas, this%env)
+        case ("kin")
+            call calc_kin_int(mat, this%atm, this%bas, this%env)
+        case ("nuc")
+            call calc_nuc_int(mat, this%atm, this%bas, this%env)
+        case default
+            call assert(.false., "Unknown integral requested") ! always failed
+        end select
+
+    end subroutine get_int1e
+
     subroutine print_geometry(this, unit)
         class(mole_t), intent(in) :: this
         integer, intent(in) :: unit
         integer :: i
 
+        call assert(this%built, "the instance is not built")
+
         call print_header("Geometry", unit)
         write (unit, "(/,'Charge = ',g0,', Spin multiplicity = ',g0)") this%charge, this%mult
         write (unit, "('Cartesian coordinates (in Angstroms):')")
-        write (unit, "(/,'     Atom           X                 X                 X')")
+        write (unit, "(/,'     Atom           X                 Y                 Z')")
         write (unit, "('    ------  ----------------  ----------------  ----------------')")
         do i = 1, size(this%atoms)
-            write (unit, "(A8,1X,3F18.10)") this%atoms(i)%s, this%atoms(i)%xyz
+            write (unit, "(A8,1X,3F18.10)") this%atoms(i)%s, this%atoms(i)%xyz*bohr_to_angstrom
         end do
+        write (unit, "(/,'The number of pure spherical functions = ',g0)") nao(this%bas)
+        write (unit, "('The number of shells = ',g0)") nshell(this%bas)
         write (unit, "(A)")
 
     end subroutine print_geometry

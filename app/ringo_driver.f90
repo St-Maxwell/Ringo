@@ -54,6 +54,7 @@ contains
         if (.has. error) return
         call mole%build(error)
         if (.has. error) return
+        call mole%print_geometry(std_out)
 
         jobs: block
             type(vla_int_const_iterator) :: it

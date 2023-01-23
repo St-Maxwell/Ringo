@@ -1,4 +1,4 @@
-module ringo_libcint_const
+module ringo_cint_const
     implicit none
 
     integer, parameter :: CHARGE_OF = 1
@@ -16,4 +16,4 @@ module ringo_libcint_const
     integer, parameter :: BAS_SLOTS = 8
     integer, parameter :: PTR_ENV_START = 20
 
-end module ringo_libcint_const
+end module ringo_cint_const
