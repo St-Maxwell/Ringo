@@ -45,6 +45,7 @@ module ringo_mole_detail
         procedure :: print_geometry
         procedure :: build
         procedure :: get_int1e
+        procedure :: get_veff
     end type
 
 contains
@@ -269,6 +270,29 @@ contains
         end select
 
     end subroutine get_int1e
+
+    subroutine get_veff(this, dm, J, K)
+        class(mole_t), intent(in) :: this
+        real(kind=f8), dimension(:, :), intent(in) :: dm
+        real(kind=f8), dimension(:, :), allocatable, intent(out), optional :: J
+        real(kind=f8), dimension(:, :), allocatable, intent(out), optional :: K
+        logical :: J_present, K_present
+
+        J_present = present(J)
+        K_present = present(K)
+        if (J_present .and. K_present) then
+            allocate (J(nao(this%bas), nao(this%bas)))
+            allocate (K(nao(this%bas), nao(this%bas)))
+            call calc_JK(J, K, dm, this%atm, this%bas, this%env)
+        else if (J_present .and. (.not. K_present)) then
+            allocate (J(nao(this%bas), nao(this%bas)))
+            call calc_J(J, dm, this%atm, this%bas, this%env)
+        else if ((.not. J_present) .and. K_present) then
+            allocate (K(nao(this%bas), nao(this%bas)))
+            call calc_K(K, dm, this%atm, this%bas, this%env)
+        end if
+
+    end subroutine get_veff
 
     subroutine print_geometry(this, unit)
         class(mole_t), intent(in) :: this

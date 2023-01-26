@@ -1,4 +1,4 @@
-module ringo_cint_int2c
+module ringo_cint_int1e
     use machina_basic, only: i4, f8
     use machina_assert
     use ringo_cint_const
@@ -40,7 +40,7 @@ contains
 
                 call array_to_mat(buf1e, mat(x:x + di - 1, y:y + dj - 1), di*dj)
 
-                if (ishl /= jshl) call array_to_mat(buf1e, mat(y:y + dj - 1, x:x + di - 1), di*dj)
+                if (ishl /= jshl) call array_to_mat_trans(buf1e, mat(y:y + dj - 1, x:x + di - 1), di*dj)
             end do
         end do
 
@@ -76,7 +76,7 @@ contains
 
                 call array_to_mat(buf1e, mat(x:x + di - 1, y:y + dj - 1), di*dj)
 
-                if (ishl /= jshl) call array_to_mat(buf1e, mat(y:y + dj - 1, x:x + di - 1), di*dj)
+                if (ishl /= jshl) call array_to_mat_trans(buf1e, mat(y:y + dj - 1, x:x + di - 1), di*dj)
             end do
         end do
 
@@ -112,7 +112,7 @@ contains
 
                 call array_to_mat(buf1e, mat(x:x + di - 1, y:y + dj - 1), di*dj)
 
-                if (ishl /= jshl) call array_to_mat(buf1e, mat(y:y + dj - 1, x:x + di - 1), di*dj)
+                if (ishl /= jshl) call array_to_mat_trans(buf1e, mat(y:y + dj - 1, x:x + di - 1), di*dj)
             end do
         end do
 
@@ -160,4 +160,4 @@ contains
 
     end function buffer_size
 
-end module ringo_cint_int2c
+end module ringo_cint_int1e
