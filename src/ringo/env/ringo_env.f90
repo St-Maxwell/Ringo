@@ -15,7 +15,7 @@ module ringo_env
 
     !> version information of ringo
     character(len=*), parameter :: ringo_version = &
-        "Version:     0.0.1, alpha"//LF// &
+        "Version:     0.0.2, alpha"//LF// &
         "Program:     ringo"//LF// &
         "Description: Ringo Is Not Gaussian/Orca"//LF// &
         "Home Page:   https://github.com/St-Maxwell/Ringo"//LF// &

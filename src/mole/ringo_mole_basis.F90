@@ -10,7 +10,7 @@
 
 module ringo_mole_basis
     use ringo_env
-    use machina_basic
+    use machina_basic, only: f8
     use machina_core
     use machina_string
     use machina_map

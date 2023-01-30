@@ -3,6 +3,8 @@ module ringo_driver
     use ringo_env
     use ringo_mole_detail
     use ringo_dead
+    use ringo_scf_main
+    use ringo_scf
     use machina_vla
     use machina_error
     implicit none
@@ -48,12 +50,14 @@ contains
         type(config_t), intent(in) :: config
         type(mole_t), intent(inout) :: mole
         type(error_t), intent(out) :: error
+        !> locals
+        class(scf_t), allocatable :: scf
 
         !> build mole
         call mole%set_basis_set(config%basis, error)
-        if (.has. error) return
+        if (.has.error) return
         call mole%build(error)
-        if (.has. error) return
+        if (.has.error) return
         call mole%print_geometry(std_out)
 
         jobs: block
@@ -61,7 +65,15 @@ contains
             it = this%jobs%const_iterator()
             do while (it%has_next())
                 !> perform each jobs
-                write(std_out,"('run job ',g0)") it%get_next()
+                select case (it%get_next())
+                case (scf_job)
+                    call run_scf(scf, mole, error)
+                    if (.has.error) return
+                case (analysis_job)
+                case default
+                    write (std_out, "(/,'**Warning**')")
+                    write (std_out, "(/,'Unknown job requested, skip')")
+                end select
             end do
         end block jobs
 

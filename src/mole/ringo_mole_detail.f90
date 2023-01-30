@@ -19,7 +19,6 @@ module ringo_mole_detail
     public :: mole_t, construct_mole
 
     type :: mole_t
-        private
         !> the total charge of the molecule
         integer :: charge = 0
         !> spin multiplicity of the molecule
@@ -44,8 +43,9 @@ module ringo_mole_detail
         generic :: set_basis_set => set_basis_set_string, set_basis_set_map
         procedure :: print_geometry
         procedure :: build
+        procedure :: get_nuc_repulsion_energy
         procedure :: get_int1e
-        procedure :: get_veff
+        procedure :: get_nbas
     end type
 
 contains
@@ -271,28 +271,40 @@ contains
 
     end subroutine get_int1e
 
-    subroutine get_veff(this, dm, J, K)
+    function get_nuc_repulsion_energy(this) result(Vnuc)
         class(mole_t), intent(in) :: this
-        real(kind=f8), dimension(:, :), intent(in) :: dm
-        real(kind=f8), dimension(:, :), allocatable, intent(out), optional :: J
-        real(kind=f8), dimension(:, :), allocatable, intent(out), optional :: K
-        logical :: J_present, K_present
+        real(kind=f8) :: Vnuc
+        !! local
+        integer :: natm
+        real(kind=f8), dimension(:, :), allocatable :: rinv, qq
+        integer :: i, j
 
-        J_present = present(J)
-        K_present = present(K)
-        if (J_present .and. K_present) then
-            allocate (J(nao(this%bas), nao(this%bas)))
-            allocate (K(nao(this%bas), nao(this%bas)))
-            call calc_JK(J, K, dm, this%atm, this%bas, this%env)
-        else if (J_present .and. (.not. K_present)) then
-            allocate (J(nao(this%bas), nao(this%bas)))
-            call calc_J(J, dm, this%atm, this%bas, this%env)
-        else if ((.not. J_present) .and. K_present) then
-            allocate (K(nao(this%bas), nao(this%bas)))
-            call calc_K(K, dm, this%atm, this%bas, this%env)
-        end if
+        natm = size(this%atoms)
+        allocate (rinv(natm, natm), source=0._f8)
+        allocate (qq(natm, natm), source=0._f8)
 
-    end subroutine get_veff
+        associate (atoms => this%atoms)
+        do j = 1, natm
+            do i = 1, natm
+                if (i /= j) then
+                    rinv(i, j) = 1/norm2(atoms(i)%xyz - atoms(j)%xyz)
+                    qq(i, j) = atoms(i)%c*atoms(j)%c
+                end if
+            end do
+        end do
+        end associate
+
+        Vnuc = 0.5_f8*sum(rinv*qq)
+
+    end function get_nuc_repulsion_energy
+
+    function get_nbas(this) result(n)
+        class(mole_t), intent(in) :: this
+        integer :: n
+
+        n = nao(this%bas)
+
+    end function get_nbas
 
     subroutine print_geometry(this, unit)
         class(mole_t), intent(in) :: this
@@ -309,7 +321,8 @@ contains
         do i = 1, size(this%atoms)
             write (unit, "(A8,1X,3F18.10)") this%atoms(i)%s, this%atoms(i)%xyz*bohr_to_angstrom
         end do
-        write (unit, "(/,'The number of pure spherical functions = ',g0)") nao(this%bas)
+        write (unit, "(/,'Nuclear repulsion energy = ',A,' a.u.')") to_string(this%get_nuc_repulsion_energy(), 10)
+        write (unit, "('The number of pure spherical functions = ',g0)") nao(this%bas)
         write (unit, "('The number of shells = ',g0)") nshell(this%bas)
         write (unit, "(A)")
 

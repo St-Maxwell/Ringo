@@ -86,6 +86,8 @@ contains
     end subroutine calc_JK
 
     subroutine calc_J(J, dm, atm, bas, env)
+        use ringo_env
+        use ringo_log_utils
         real(kind=f8), dimension(:, :), intent(inout) :: J
         real(kind=f8), dimension(:, :), intent(in) :: dm
         integer(kind=i4), dimension(:), intent(in) :: atm
@@ -97,6 +99,7 @@ contains
         type(c_ptr) :: opt
         integer, dimension(4) :: shls
         integer, dimension(:, :), allocatable :: pairs
+        real(kind=f8) :: fact
         integer :: natm, nshls, info
         integer :: ipr, jpr, p, q, r, s
         integer :: dp, dq, dr, ds
@@ -115,7 +118,7 @@ contains
             dq = nbas_per_shell(bas, q)
             x = shell_slice(bas, p); xx = x + dp - 1
             y = shell_slice(bas, q); yy = y + dq - 1
-            do jpr = ipr, size(pairs, dim=2)
+            do jpr = 1, size(pairs, dim=2)
                 r = pairs(1, jpr); s = pairs(2, jpr)
                 shls(3) = r - 1; shls(4) = s - 1
                 dr = nbas_per_shell(bas, r)
@@ -127,24 +130,16 @@ contains
                 info = cint2e_sph(buf2e, shls, atm, natm, bas, nshls, env, opt)
 
                 eri(1:dp, 1:dq, 1:dr, 1:ds) => buf2e(:dp*dq*dr*ds)
+                fact = merge(1._f8, 2._f8, r == s)
 
                 !> J_MN = (MN|PQ)*D_PQ
                 do iy = 1, dq
                     do ix = 1, dp
                         J(x + ix - 1, y + iy - 1) = J(x + ix - 1, y + iy - 1) &
-                                                & + sum(eri(ix, iy, :, :)*dm(z:zz, w:ww))
+                                                & + fact*sum(eri(ix, iy, :, :)*dm(z:zz, w:ww))
                     end do
                 end do
 
-                !> J_PQ = (PQ|MN)*D_MN
-                if (jpr /= ipr) then
-                    do iw = 1, ds
-                        do iz = 1, dr
-                            J(z + iz - 1, w + iw - 1) = J(z + iz - 1, w + iw - 1) &
-                                                    & + sum(eri(:, :, iz, iw)*dm(x:xx, y:yy))
-                        end do
-                    end do
-                end if
             end do
             if (p /= q) then
                 J(y:yy, x:xx) = transpose(J(x:xx, y:yy))
@@ -185,7 +180,7 @@ contains
             dq = nbas_per_shell(bas, q)
             x = shell_slice(bas, p); xx = x + dp - 1
             y = shell_slice(bas, q); yy = y + dq - 1
-            do jpr = ipr, size(pairs, dim=2)
+            do jpr = 1, size(pairs, dim=2)
                 r = pairs(1, jpr); s = pairs(2, jpr)
                 shls(2) = r - 1; shls(4) = s - 1
                 dr = nbas_per_shell(bas, r)
@@ -193,7 +188,7 @@ contains
                 z = shell_slice(bas, r); zz = z + dr - 1
                 w = shell_slice(bas, s); ww = w + ds - 1
 
-                ! unique shell quartets (pr|qs)
+                ! shell quartets (pr|qs)
                 info = cint2e_sph(buf2e, shls, atm, natm, bas, nshls, env, opt)
 
                 eri(1:dp, 1:dr, 1:dq, 1:ds) => buf2e(:dp*dr*dq*ds)
@@ -206,15 +201,23 @@ contains
                     end do
                 end do
 
-                !> K_PQ = (PM|QN)*D_MN
-                if (jpr /= ipr) then
-                    do iw = 1, ds
-                        do iz = 1, dr
-                            K(z + iz - 1, w + iw - 1) = K(z + iz - 1, w + iw - 1) &
-                                                    & + sum(eri(:, iz, :, iw)*dm(x:xx, y:yy))
+                if (r /= s) then
+                    shls(4) = r - 1; shls(2) = s - 1
+
+                    ! shell quartets (ps|qr)
+                    info = cint2e_sph(buf2e, shls, atm, natm, bas, nshls, env, opt)
+
+                    eri(1:dp, 1:ds, 1:dq, 1:dr) => buf2e(:dp*dr*dq*ds)
+
+                    !> K_MN = (MQ|NP)*D_QP
+                    do iy = 1, dq
+                        do ix = 1, dp
+                            K(x + ix - 1, y + iy - 1) = K(x + ix - 1, y + iy - 1) &
+                                                    & + sum(eri(ix, :, iy, :)*dm(w:ww, z:zz))
                         end do
                     end do
                 end if
+
             end do
             if (p /= q) then
                 K(y:yy, x:xx) = transpose(K(x:xx, y:yy))

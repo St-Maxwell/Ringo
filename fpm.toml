@@ -7,7 +7,7 @@ copyright = "Copyright 2022, St Maxwell"
 
 [build]
 auto-executables = true
-link = ["cint"]
+link = ["cint","openblas"]
 
 [dev-dependencies]
 test-drive.git = "https://github.com/fortran-lang/test-drive.git"
