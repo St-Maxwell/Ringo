@@ -13,6 +13,11 @@ link = ["cint","openblas"]
 test-drive.git = "https://github.com/fortran-lang/test-drive.git"
 
 [[test]]
+name = "cint"
+source-dir = "test/cint"
+main = "tester.f90"
+
+[[test]]
 name = "mole"
 source-dir = "test/mole"
 main = "test.f90"

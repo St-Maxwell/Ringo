@@ -14,13 +14,13 @@ module ringo_mole_atom
     !> do not use it for other purpose
     type :: atom_t
         !> atomic number
-        integer :: n
+        integer :: atm_num
         !> symbol of the atom
-        character(len=:), allocatable :: s
+        character(len=:), allocatable :: symbol
         !> nuclear charge of the atom
-        real(kind=f8) :: c
+        real(kind=f8) :: charge
         !> weight of the atom, in atomic unit
-        real(kind=f8) :: w
+        real(kind=f8) :: weight
         !> cartesian coordinate of the atom, in a.u.
         real(kind=f8), dimension(3) :: xyz
     end type
@@ -103,11 +103,11 @@ contains
         call debug_assert(atomic_number >= 0 .and. atomic_number <= num_supported_elements, &
                           msg="Unsupported atom")
 
-        atm%s = element_list(atomic_number)
-        atm%n = atomic_number
+        atm%symbol = element_list(atomic_number)
+        atm%atm_num = atomic_number
         atm%xyz = xyz
-        atm%c = atomic_number
-        atm%w = element_weight(atomic_number)
+        atm%charge = atomic_number
+        atm%weight = element_weight(atomic_number)
 
     end subroutine construct_atom
 

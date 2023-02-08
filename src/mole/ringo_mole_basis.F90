@@ -28,18 +28,18 @@ module ringo_mole_basis
     !> not used for calculation
     type :: basis_set_shell
         !> orbital angular momentum
-        integer :: l
+        integer :: am
         !> contraction coefficients of GTOs
-        real(kind=f8), dimension(:), allocatable :: c
+        real(kind=f8), dimension(:), allocatable :: coeff
         !> exponents of GTOs
-        real(kind=f8), dimension(:), allocatable :: e
+        real(kind=f8), dimension(:), allocatable :: expnt
     end type
 
     !> the internal format of basis set definition
     !> not used for calculation
     type :: basis_set_t
         !> atom which is assigned the basis set
-        character(len=:), allocatable :: a
+        character(len=:), allocatable :: atom
         !> the definition of basis set
         type(basis_set_shell), dimension(:), allocatable :: shells
     end type
@@ -55,8 +55,9 @@ contains
 
         iterate: block
             type(map_iterator) :: it
-            character(len=:), allocatable :: atom, bas_file
+            character(len=:), allocatable :: atom, basis_file
             class(machina_value), pointer :: vptr
+            character(len=:), allocatable :: basis_name
             type(basis_set_t) :: newbasis
             type(basis_set_shell), dimension(:), allocatable :: shls
             logical :: next
@@ -68,18 +69,14 @@ contains
                 if (.not. next) exit
                 call it%next_pair(atom, vptr)
 
-                select type (vptr)
-                type is (char_value)
-                    bas_file = basis_dir//basis_file_name(vptr%raw)
-                    write(std_out,"('Atom: ',A,'  Basis set: ',A)") atom, vptr%raw
-                    write(std_out,"(' in file ',A)") bas_file
-                    call load_basis(shls, bas_file, to_lower(atom), error)
-                    if (.has.error) return
-                    basis = [basis, basis_set_t(atom, shls)]
-                class default
-                    call raise_error(error, "Invalid basis set name")
-                    return
-                end select
+                basis_name = cast_to_char(vptr)
+
+                basis_file = basis_dir//basis_file_name(basis_name)
+                write (std_out, "('Atom: ',A,'  Basis set: ',A)") atom, basis_name
+                write (std_out, "(' in file ',A)") basis_file
+                call load_basis(shls, basis_file, to_lower(atom), error)
+                if (.has.error) return
+                basis = [basis, basis_set_t(atom, shls)]
 
             end do
 

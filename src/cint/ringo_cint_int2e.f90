@@ -6,88 +6,11 @@ module ringo_cint_int2e
     use ringo_cint_utils
     implicit none
     private
-    public :: calc_JK, calc_J, calc_K
+    public :: calc_J, calc_K
 
 contains
 
-    !> build J (coulomb) and J (exchange) matrix simultaneously
-    !> however, currently the results are wrong
-    subroutine calc_JK(J, K, dm, atm, bas, env)
-        real(kind=f8), dimension(:, :), intent(inout) :: J
-        real(kind=f8), dimension(:, :), intent(inout) :: K
-        real(kind=f8), dimension(:, :), intent(in) :: dm
-        integer(kind=i4), dimension(:), intent(in) :: atm
-        integer(kind=i4), dimension(:), intent(in) :: bas
-        real(kind=f8), dimension(:), intent(in) :: env
-        !> locals
-        real(kind=f8), dimension(:), allocatable, target :: buf2e
-        real(kind=f8), dimension(:, :, :, :), pointer :: eri
-        real(kind=f8) :: tpq, tpr, tqr, I
-        type(c_ptr) :: opt
-        integer, dimension(4) :: shls
-        integer, dimension(:, :), allocatable :: pairs
-        integer :: natm, nshls, info
-        integer :: ipr, jpr, p, q, r, s
-        integer :: dp, dq, dr, ds
-        integer :: x, y, z, w, xx, yy, zz, ww, ix, iy, iz, iw
-
-        natm = size(atm)/ATM_SLOTS; nshls = nshell(bas)
-        call cint2e_sph_optimizer(opt, atm, natm, bas, nshls, env)
-        call shell_pairs(pairs, nshls)
-        allocate (buf2e(buffer_size(bas)))
-
-        J = 0; K = 0
-        do ipr = 1, size(pairs, dim=2)
-            p = pairs(1, ipr); q = pairs(2, ipr)
-            shls(1) = p - 1; shls(2) = q - 1
-            dp = nbas_per_shell(bas, p)
-            dq = nbas_per_shell(bas, q)
-            x = shell_slice(bas, p); xx = x + dp - 1
-            y = shell_slice(bas, q); yy = y + dq - 1
-            do jpr = ipr, size(pairs, dim=2)
-                r = pairs(1, jpr); s = pairs(2, jpr)
-                shls(3) = r - 1; shls(4) = s - 1
-                dr = nbas_per_shell(bas, r)
-                ds = nbas_per_shell(bas, s)
-                z = shell_slice(bas, r); zz = z + dr - 1
-                w = shell_slice(bas, s); ww = w + ds - 1
-
-                ! unique shell quartets (pq|rs)
-                info = cint2e_sph(buf2e, shls, atm, natm, bas, nshls, env, opt)
-
-                eri(1:dp, 1:dq, 1:dr, 1:ds) => buf2e(:dp*dq*dr*ds)
-
-                do ix = 1, dp
-                    do iy = 1, dq
-                        tpq = 0
-                        do iz = 1, dr
-                            tpr = 0; tqr = 0
-                            do iw = 1, ds
-                                I = eri(ix, iy, iz, iw)
-                                tpq = tpq + dm(z + iz - 1, w + iw - 1)*I
-                                tpr = tpr + dm(y + iy - 1, w + iw - 1)*I
-                                tqr = tqr + dm(x + ix - 1, w + iw - 1)*I
-                                J(z + iz - 1, w + iw - 1) = J(z + iz - 1, w + iw - 1) + dm(x + ix - 1, y + iy - 1)*I
-                                K(x + ix - 1, w + iw - 1) = K(x + ix - 1, w + iw - 1) + dm(y + iy - 1, z + iz - 1)*I
-                                K(y + iy - 1, w + iw - 1) = K(y + iy - 1, w + iw - 1) + dm(x + ix - 1, z + iz - 1)*I
-                            end do
-                            K(x + ix - 1, z + iz - 1) = K(x + ix - 1, z + iz - 1) + tpr
-                            K(y + iy - 1, z + iz - 1) = K(y + iy - 1, z + iz - 1) + tqr
-                        end do
-                        J(x + ix - 1, y + iy - 1) = J(x + ix - 1, y + iy - 1) + tpq
-                    end do
-                end do
-
-            end do
-        end do
-
-        call CINTdel_optimizer(opt)
-
-    end subroutine calc_JK
-
     subroutine calc_J(J, dm, atm, bas, env)
-        use ringo_env
-        use ringo_log_utils
         real(kind=f8), dimension(:, :), intent(inout) :: J
         real(kind=f8), dimension(:, :), intent(in) :: dm
         integer(kind=i4), dimension(:), intent(in) :: atm
@@ -100,67 +23,66 @@ contains
         integer, dimension(4) :: shls
         integer, dimension(:, :), allocatable :: pairs
         integer, dimension(:), allocatable :: shl_dim, shl_slices
-        real(kind=f8) :: fpq, frs
         integer :: natm, nshls, info
-        integer :: ipr, jpr, p, q, r, s
-        integer :: dp, dq, dr, ds
-        integer :: x, y, z, w, xx, yy, zz, ww, ix, iy, iz, iw
+        real(kind=f8), dimension(6) :: factors
+        integer :: ipr, jpr
+        integer :: M, N, P, Q
+        integer :: dimM, dimN, dimP, dimQ
+        integer :: iM0, iN0, iP0, iQ0
+        integer :: iM, iN, iP, iQ
+        real(kind=f8) :: J_MN, eri_value
+        real(kind=f8) :: fac2_D_MN
+        integer :: i
 
         natm = size(atm)/ATM_SLOTS; nshls = nshell(bas)
         call cint2e_sph_optimizer(opt, atm, natm, bas, nshls, env)
         call shell_pairs(pairs, nshls)
         allocate (shl_dim(nshls))
         allocate (shl_slices(nshls))
-        do p = 1, nshls
-            shl_dim(p) = nbas_per_shell(bas, p)
-            shl_slices(p) = shell_slice(bas, p)
+        do i = 1, nshls
+            shl_dim(i) = nbas_per_shell(bas, i)
+            shl_slices(i) = shell_slice(bas, i)
         end do
         allocate (buf2e(buffer_size(bas)))
 
         J = 0
         do ipr = 1, size(pairs, dim=2)
-            p = pairs(1, ipr); q = pairs(2, ipr)
-            shls(1) = p - 1; shls(2) = q - 1
-            dp = shl_dim(p)
-            dq = shl_dim(q)
-            x = shl_slices(p); xx = x + dp - 1
-            y = shl_slices(q); yy = y + dq - 1
-            fpq = merge(1._f8, 2._f8, p == q)
+            M = pairs(1, ipr); N = pairs(2, ipr)
+            shls(1) = M - 1; shls(2) = N - 1
+            dimM = shl_dim(M); iM0 = shl_slices(M)
+            dimN = shl_dim(N); iN0 = shl_slices(N)
 
-            do jpr = ipr, size(pairs, dim=2)
-                r = pairs(1, jpr); s = pairs(2, jpr)
-                shls(3) = r - 1; shls(4) = s - 1
-                dr = shl_dim(r)
-                ds = shl_dim(s)
-                z = shl_slices(r); zz = z + dr - 1
-                w = shl_slices(s); ww = w + ds - 1
-                frs = merge(1._f8, 2._f8, r == s)
+            do jpr = 1, ipr
+                P = pairs(1, jpr); Q = pairs(2, jpr)
+                shls(3) = P - 1; shls(4) = Q - 1
+                dimP = shl_dim(P); iP0 = shl_slices(P)
+                dimQ = shl_dim(Q); iQ0 = shl_slices(Q)
 
                 ! unique shell quartets (pq|rs)
                 info = cint2e_sph(buf2e, shls, atm, natm, bas, nshls, env, opt)
+                eri(1:dimM, 1:dimN, 1:dimP, 1:dimQ) => buf2e(:dimM*dimN*dimP*dimQ)
+                call unique_factor(M, N, P, Q, factors)
 
-                eri(1:dp, 1:dq, 1:dr, 1:ds) => buf2e(:dp*dq*dr*ds)
-
-                !> J_pq = (pq|rs)*D_rs
-                call contract(eri, dm(z:zz,w:ww), [3,4], frs, J(x:xx,y:yy))
-
-                if (ipr /= jpr) call contract(eri, dm(x:xx,y:yy), [1,2], fpq, J(z:zz,w:ww))
+                do iN = 0, dimN - 1
+                do iM = 0, dimM - 1
+                    fac2_D_MN = factors(2)*dm(iM0 + iM, iN0 + iN)
+                    J_MN = 0
+                    do iQ = 0, dimQ - 1
+                    do iP = 0, dimP - 1
+                        eri_value = eri(iM + 1, iN + 1, iP + 1, iQ + 1)
+                        J_MN = J_MN + eri_value*dm(iP0 + iP, iQ0 + iQ)
+                        J(iP0 + iP, iQ0 + iQ) = J(iP0 + iP, iQ0 + iQ) + eri_value*fac2_D_MN
+                    end do
+                    end do
+                    J(iM0 + iM, iN0 + iN) = J(iM0 + iM, iN0 + iN) + factors(1)*J_MN
+                end do
+                end do
 
             end do
         end do
 
         !> symmetrize
-        do ipr = 1, size(pairs, dim=2)
-            p = pairs(1, ipr); q = pairs(2, ipr)
-            if (p == q) cycle
-            dp = shl_dim(p)
-            dq = shl_dim(q)
-            x = shl_slices(p); xx = x + dp - 1
-            y = shl_slices(q); yy = y + dq - 1
-
-            J(x:xx, y:yy) = J(x:xx, y:yy) + transpose(J(y:yy, x:xx))
-            J(y:yy, x:xx) = transpose(J(x:xx, y:yy))
-        end do
+        J = 0.5_f8*(J + transpose(J))
 
         call CINTdel_optimizer(opt)
 
@@ -178,119 +100,97 @@ contains
         type(c_ptr) :: opt
         integer, dimension(4) :: shls
         integer, dimension(:, :), allocatable :: pairs
+        integer, dimension(:), allocatable :: shl_dim, shl_slices
         integer :: natm, nshls, info
-        integer :: ipr, jpr, p, q, r, s
-        integer :: dp, dq, dr, ds
-        integer :: x, y, z, w, xx, yy, zz, ww, ix, iy, iz, iw
+        real(kind=f8), dimension(6) :: factors
+        integer :: ipr, jpr
+        integer :: M, N, P, Q
+        integer :: dimM, dimN, dimP, dimQ
+        integer :: iM0, iN0, iP0, iQ0
+        integer :: iM, iN, iP, iQ
+        real(kind=f8) :: K_MP, K_NP, eri_value
+        real(kind=f8) :: fac5_D_NP, fac6_D_MP
+        integer :: i
 
         natm = size(atm)/ATM_SLOTS; nshls = nshell(bas)
         call cint2e_sph_optimizer(opt, atm, natm, bas, nshls, env)
         call shell_pairs(pairs, nshls)
+        allocate (shl_dim(nshls))
+        allocate (shl_slices(nshls))
+        do i = 1, nshls
+            shl_dim(i) = nbas_per_shell(bas, i)
+            shl_slices(i) = shell_slice(bas, i)
+        end do
         allocate (buf2e(buffer_size(bas)))
 
         K = 0
         do ipr = 1, size(pairs, dim=2)
-            p = pairs(1, ipr); q = pairs(2, ipr)
-            shls(1) = p - 1; shls(3) = q - 1
-            dp = nbas_per_shell(bas, p)
-            dq = nbas_per_shell(bas, q)
-            x = shell_slice(bas, p); xx = x + dp - 1
-            y = shell_slice(bas, q); yy = y + dq - 1
-            do jpr = 1, size(pairs, dim=2)
-                r = pairs(1, jpr); s = pairs(2, jpr)
-                shls(2) = r - 1; shls(4) = s - 1
-                dr = nbas_per_shell(bas, r)
-                ds = nbas_per_shell(bas, s)
-                z = shell_slice(bas, r); zz = z + dr - 1
-                w = shell_slice(bas, s); ww = w + ds - 1
+            M = pairs(1, ipr); N = pairs(2, ipr)
+            shls(1) = M - 1; shls(2) = N - 1
+            dimM = shl_dim(M); iM0 = shl_slices(M)
+            dimN = shl_dim(N); iN0 = shl_slices(N)
 
-                ! shell quartets (pr|qs)
+            do jpr = 1, ipr
+                P = pairs(1, jpr); Q = pairs(2, jpr)
+                shls(3) = P - 1; shls(4) = Q - 1
+                dimP = shl_dim(P); iP0 = shl_slices(P)
+                dimQ = shl_dim(Q); iQ0 = shl_slices(Q)
+
+                ! unique shell quartets (pq|rs)
                 info = cint2e_sph(buf2e, shls, atm, natm, bas, nshls, env, opt)
+                eri(1:dimM, 1:dimN, 1:dimP, 1:dimQ) => buf2e(:dimM*dimN*dimP*dimQ)
+                call unique_factor(M, N, P, Q, factors)
 
-                eri(1:dp, 1:dr, 1:dq, 1:ds) => buf2e(:dp*dr*dq*ds)
+                do iM = 0, dimM - 1
+                do iN = 0, dimN - 1
+                do iP = 0, dimP - 1
+                    fac5_D_NP = factors(5)*dm(iN0 + iN, iP0 + iP)
+                    fac6_D_MP = factors(6)*dm(iM0 + iM, iP0 + iP)
+                    K_MP = 0; K_NP = 0
+                    do iQ = 0, dimQ - 1
+                        eri_value = eri(iM + 1, iN + 1, iP + 1, iQ + 1)
+                        K_MP = K_MP + eri_value*dm(iN0 + iN, iQ0 + iQ)
+                        K_NP = K_NP + eri_value*dm(iM0 + iM, iQ0 + iQ)
 
-                !> K_MN = (MP|NQ)*D_PQ
-                do iy = 1, dq
-                    do ix = 1, dp
-                        K(x + ix - 1, y + iy - 1) = K(x + ix - 1, y + iy - 1) &
-                                                & + sum(eri(ix, :, iy, :)*dm(z:zz, w:ww))
+                        K(iM0 + iM, iQ0 + iQ) = K(iM0 + iM, iQ0 + iQ) + eri_value*fac5_D_NP
+                        K(iN0 + iN, iQ0 + iQ) = K(iN0 + iN, iQ0 + iQ) + eri_value*fac6_D_MP
                     end do
+                    K(iM0 + iM, iP0 + iP) = K(iM0 + iM, iP0 + iP) + factors(3)*K_MP
+                    K(iN0 + iN, iP0 + iP) = K(iN0 + iN, iP0 + iP) + factors(4)*K_NP
+                end do
+                end do
                 end do
 
-                if (r /= s) then
-                    shls(4) = r - 1; shls(2) = s - 1
-
-                    ! shell quartets (ps|qr)
-                    info = cint2e_sph(buf2e, shls, atm, natm, bas, nshls, env, opt)
-
-                    eri(1:dp, 1:ds, 1:dq, 1:dr) => buf2e(:dp*dr*dq*ds)
-
-                    !> K_MN = (MQ|NP)*D_QP
-                    do iy = 1, dq
-                        do ix = 1, dp
-                            K(x + ix - 1, y + iy - 1) = K(x + ix - 1, y + iy - 1) &
-                                                    & + sum(eri(ix, :, iy, :)*dm(w:ww, z:zz))
-                        end do
-                    end do
-                end if
-
             end do
-            if (p /= q) then
-                K(y:yy, x:xx) = transpose(K(x:xx, y:yy))
-            end if
         end do
+
+        !> symmetrize
+        K = 0.5_f8*(K + transpose(K))
 
         call CINTdel_optimizer(opt)
 
     end subroutine calc_K
 
-    subroutine contract(eri, dm, cnt_idx, fact, out)
-        real(kind=f8), dimension(:, :, :, :), intent(in) :: eri
-        real(kind=f8), dimension(:, :), intent(in) :: dm
-        integer, dimension(2), intent(in) :: cnt_idx
-        real(kind=f8), intent(in) :: fact !> factor
-        real(kind=f8), dimension(:, :), intent(inout) :: out !> increment
-        integer :: i, j
+    pure subroutine unique_factor(M, N, P, Q, factors)
+        integer, intent(in) :: M, N, P, Q
+        real(kind=f8), dimension(6), intent(out) :: factors
+        integer :: flag1, flag2, flag3, flag4, flag5, flag6, flag7
 
-        if (all(cnt_idx == [1, 2])) then
-            do j = 1, size(out, dim=2)
-                do i = 1, size(out, dim=1)
-                    out(i, j) = out(i, j) + fact*sum(eri(:, :, i, j)*dm(:, :))
-                end do
-            end do
-        else if (all(cnt_idx == [1, 3])) then
-            do j = 1, size(out, dim=2)
-                do i = 1, size(out, dim=1)
-                    out(i, j) = out(i, j) + fact*sum(eri(:, i, :, j)*dm(:, :))
-                end do
-            end do
-        else if (all(cnt_idx == [1, 4])) then
-            do j = 1, size(out, dim=2)
-                do i = 1, size(out, dim=1)
-                    out(i, j) = out(i, j) + fact*sum(eri(:, i, j, :)*dm(:, :))
-                end do
-            end do
-        else if (all(cnt_idx == [2, 3])) then
-            do j = 1, size(out, dim=2)
-                do i = 1, size(out, dim=1)
-                    out(i, j) = out(i, j) + fact*sum(eri(i, :, :, j)*dm(:, :))
-                end do
-            end do
-        else if (all(cnt_idx == [2, 4])) then
-            do j = 1, size(out, dim=2)
-                do i = 1, size(out, dim=1)
-                    out(i, j) = out(i, j) + fact*sum(eri(i, :, j, :)*dm(:, :))
-                end do
-            end do
-        else if (all(cnt_idx == [3, 4])) then
-            do j = 1, size(out, dim=2)
-                do i = 1, size(out, dim=1)
-                    out(i, j) = out(i, j) + fact*sum(eri(i, j, :, :)*dm(:, :))
-                end do
-            end do
-        end if
+        flag1 = merge(0, 1, M == N)
+        flag2 = merge(0, 1, P == Q)
+        flag3 = merge(0, 1, (M == P) .and. (N == Q))
+        flag4 = merge(1, 0, (flag1 == 1) .and. (flag2 == 1))
+        flag5 = merge(1, 0, (flag1 == 1) .and. (flag3 == 1))
+        flag6 = merge(1, 0, (flag2 == 1) .and. (flag3 == 1))
+        flag7 = merge(1, 0, (flag4 == 1) .and. (flag3 == 1))
+        factors(1) = 1._f8 + flag1 + flag2 + flag4 ! for J_MN
+        factors(2) = flag3 + flag5 + flag6 + flag7 ! for J_PQ
+        factors(3) = 1._f8 + flag3 ! for K_MP
+        factors(4) = flag1 + flag5 ! for K_NP
+        factors(5) = flag2 + flag6 ! for K_MQ
+        factors(6) = flag4 + flag7 ! for K_NQ
 
-    end subroutine contract
+    end subroutine unique_factor
 
     pure function buffer_size(bas) result(n)
         integer(kind=i4), dimension(:), intent(in) :: bas
@@ -311,7 +211,7 @@ contains
 
         k = 1
         do i = 1, nshls
-            do j = i, nshls
+            do j = 1, i
                 pairs(1, k) = i
                 pairs(2, k) = j
                 k = k + 1

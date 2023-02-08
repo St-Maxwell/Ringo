@@ -63,7 +63,7 @@ contains
         call format_atoms(atoms, this%atoms, error)
         if (.has.error) return
 
-        this%nele = sum(this%atoms%n) - this%charge
+        this%nele = sum(this%atoms%atm_num) - this%charge
         if (mod(this%nele + this%mult - 1, 2) /= 0) then
             call raise_error(error, "Electron number "//to_string(this%nele)// &
                                   & " and multiplicity "//to_string(this%mult)// &
@@ -92,7 +92,7 @@ contains
             type(vla_char) :: atoms
             integer :: i
             do i = 1, size(this%atoms)
-                call atoms%push_back(this%atoms(i)%s)
+                call atoms%push_back(this%atoms(i)%symbol)
             end do
             call unique(atoms, unique_atom)
         end block
@@ -152,15 +152,15 @@ contains
             type(vla_int), allocatable :: bas0
             do i = 1, size(this%basis)
                 call make_bas_env(this%basis(i)%shells, offset, bas0, env)
-                call bas_dict%insert(this%basis(i)%a(:), bas0)
+                call bas_dict%insert(this%basis(i)%atom(:), bas0)
             end do
         end block iterate_shell
 
         assign_bas_for_atoms: block
             type(vla_int), pointer :: b
             do i = 1, size(this%atoms)
-                if (bas_dict%has_key(this%atoms(i)%s)) then
-                    call bas_dict%get_vla_int(this%atoms(i)%s, b, error)
+                if (bas_dict%has_key(this%atoms(i)%symbol)) then
+                    call bas_dict%get_vla_int(this%atoms(i)%symbol, b, error)
                     if (.has.error) return
                     do j = 1, size(b), BAS_SLOTS
                         b%ptr_at((j - 1) + ATOM_OF) = i - 1 ! 0-based
@@ -184,7 +184,7 @@ contains
         integer(kind=i4), dimension(ATM_SLOTS) :: atm_
 
         atm_ = 0
-        atm_(CHARGE_OF) = atom%n
+        atm_(CHARGE_OF) = atom%atm_num
         atm_(PTR_COORD) = offset
         atm_(NUC_MOD_OF) = 1
 
@@ -207,22 +207,22 @@ contains
         do i = 1, size(basis)
             bas_ = 0
             ! bas_(ATOM_OF) = 0 *intent to do so*
-            bas_(ANG_OF) = basis(i)%l
-            bas_(NPRIM_OF) = size(basis(i)%e)
+            bas_(ANG_OF) = basis(i)%am
+            bas_(NPRIM_OF) = size(basis(i)%expnt)
             bas_(NCTR_OF) = 1 ! just fix it
 
-            coeff = basis(i)%c
-            do j = 1, size(basis(i)%e)
-                coeff(j) = coeff(j)*gto_norm(basis(i)%l, basis(i)%e(j))
+            coeff = basis(i)%coeff
+            do j = 1, size(basis(i)%expnt)
+                coeff(j) = coeff(j)*gto_norm(basis(i)%am, basis(i)%expnt(j))
             end do
-            call normalize_contracted_ao(basis(i)%l, basis(i)%e, coeff)
+            call normalize_contracted_ao(basis(i)%am, basis(i)%expnt, coeff)
 
-            call env%push_back(basis(i)%e)
+            call env%push_back(basis(i)%expnt)
             bas_(PTR_EXP) = offset
-            offset = offset + size(basis(i)%e)
+            offset = offset + size(basis(i)%expnt)
             call env%push_back(coeff)
             bas_(PTR_COEFF) = offset
-            offset = offset + size(basis(i)%e)
+            offset = offset + size(basis(i)%expnt)
             call bas0%push_back(bas_)
         end do
 
@@ -288,7 +288,7 @@ contains
             do i = 1, natm
                 if (i /= j) then
                     rinv(i, j) = 1/norm2(atoms(i)%xyz - atoms(j)%xyz)
-                    qq(i, j) = atoms(i)%c*atoms(j)%c
+                    qq(i, j) = atoms(i)%charge*atoms(j)%charge
                 end if
             end do
         end do
@@ -319,7 +319,7 @@ contains
         write (unit, "(/,'     Atom           X                 Y                 Z')")
         write (unit, "('    ------  ----------------  ----------------  ----------------')")
         do i = 1, size(this%atoms)
-            write (unit, "(A8,1X,3F18.10)") this%atoms(i)%s, this%atoms(i)%xyz*bohr_to_angstrom
+            write (unit, "(A8,1X,3F18.10)") this%atoms(i)%symbol, this%atoms(i)%xyz*bohr_to_angstrom
         end do
         write (unit, "(/,'Nuclear repulsion energy = ',A,' a.u.')") to_string(this%get_nuc_repulsion_energy(), 10)
         write (unit, "('The number of pure spherical functions = ',g0)") nao(this%bas)
