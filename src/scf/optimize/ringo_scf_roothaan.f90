@@ -11,6 +11,7 @@ module ringo_scf_roothaan
     contains
         procedure :: next_step
         procedure :: name
+        procedure :: error_description
     end type
 
 contains
@@ -46,5 +47,13 @@ contains
         s = "Roothaan diagonalization"
 
     end function name
+
+    function error_description(this) result(s)
+        class(roothaan_t), intent(in) :: this
+        character(len=:), allocatable :: s
+
+        s = "RMS [P, F]"
+
+    end function error_description
 
 end module ringo_scf_roothaan

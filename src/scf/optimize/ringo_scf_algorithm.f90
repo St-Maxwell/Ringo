@@ -12,6 +12,7 @@ module ringo_scf_algorithm
     contains
         procedure(next_step), deferred :: next_step
         procedure(name), deferred :: name
+        procedure(error_description), deferred :: error_description
     end type
 
     abstract interface
@@ -27,6 +28,12 @@ module ringo_scf_algorithm
             class(scf_optimizer_t), intent(in) :: this
             character(len=:), allocatable :: s
         end function name
+
+        function error_description(this) result(s)
+            import :: scf_optimizer_t
+            class(scf_optimizer_t), intent(in) :: this
+            character(len=:), allocatable :: s
+        end function error_description
     end interface
 
 end module ringo_scf_algorithm

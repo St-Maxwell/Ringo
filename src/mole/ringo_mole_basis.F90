@@ -72,8 +72,8 @@ contains
                 basis_name = cast_to_char(vptr)
 
                 basis_file = basis_dir//basis_file_name(basis_name)
-                write (std_out, "('Atom: ',A,'  Basis set: ',A)") atom, basis_name
-                write (std_out, "(' in file ',A)") basis_file
+                write (std_out, "(' Atom: ',A,'  Basis set: ',A)") atom, basis_name
+                write (std_out, "('   in file ',A)") basis_file
                 call load_basis(shls, basis_file, to_lower(atom), error)
                 if (.has.error) return
                 basis = [basis, basis_set_t(atom, shls)]

@@ -106,6 +106,7 @@ contains
         end block
 
         call print_header("Loading Basis Set", std_out)
+        write (std_out, "(A)")
         call format_basis_set(bas, this%basis, error)
         write (std_out, "(A)")
 
@@ -117,6 +118,7 @@ contains
         type(error_t), intent(out) :: error
 
         call print_header("Loading Basis Set", std_out)
+        write (std_out, "(A)")
         call format_basis_set(basis, this%basis, error)
         write (std_out, "(A)")
 
@@ -314,16 +316,16 @@ contains
         call assert(this%built, "the instance is not built")
 
         call print_header("Geometry", unit)
-        write (unit, "(/,'Charge = ',g0,', Spin multiplicity = ',g0)") this%charge, this%mult
-        write (unit, "('Cartesian coordinates (in Angstroms):')")
+        write (unit, "(/,' Charge = ',g0,', Spin multiplicity = ',g0)") this%charge, this%mult
+        write (unit, "(' Cartesian coordinates (in Angstroms):')")
         write (unit, "(/,'     Atom           X                 Y                 Z')")
         write (unit, "('    ------  ----------------  ----------------  ----------------')")
         do i = 1, size(this%atoms)
             write (unit, "(A8,1X,3F18.10)") this%atoms(i)%symbol, this%atoms(i)%xyz*bohr_to_angstrom
         end do
-        write (unit, "(/,'Nuclear repulsion energy = ',A,' a.u.')") to_string(this%get_nuc_repulsion_energy(), 10)
-        write (unit, "('The number of pure spherical functions = ',g0)") nao(this%bas)
-        write (unit, "('The number of shells = ',g0)") nshell(this%bas)
+        write (unit, "(/,' Nuclear repulsion energy = ',A,' a.u.')") to_string(this%get_nuc_repulsion_energy(), 10)
+        write (unit, "(' The number of pure spherical functions = ',g0)") nao(this%bas)
+        write (unit, "(' The number of shells = ',g0)") nshell(this%bas)
         write (unit, "(A)")
 
     end subroutine print_geometry

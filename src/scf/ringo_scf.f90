@@ -53,26 +53,35 @@ contains
         class(scf_t), intent(inout) :: this
         type(error_t), intent(out) :: error
         !> locals
-        integer :: i
+        logical :: converged
+        integer :: iter
 
         call show_params(this%params, std_out)
 
         call this%obtain_guess(this%params%guess)
 
-        call print_header("SCF iteration", std_out)
-        write(std_out,"(/,'          Total Energy         Error',/)")
-        do i = 1, this%params%max_iter
+        call print_header("SCF Iterations", std_out)
+        write (std_out, "(/,10X,'Total Energy',7X,A,/)") this%optimizer%error_description()
+        do iter = 1, this%params%max_iter
             if (this%optimizer%next_step()) exit
-            write (std_out, "(I5,2F17.8)") i, this%total_energy(), this%optimizer%error
+            write (std_out, "(I5,2F17.8)") iter, this%total_energy(), this%optimizer%error
         end do
-        write (std_out, "(A)")
 
-        call print_header("Converged energies", std_out)
-        write (std_out, "(A)")
-        call this%cec%print(std_out)
-        call this%ec%print(std_out)
-        write (std_out, "(' Total Energy = ',F16.10,' a.u.')") this%total_energy()
-        write (std_out, "(A)")
+        converged = iter <= this%params%max_iter
+
+        if (converged) then
+            write (std_out, "(I5,2F17.8,' <-- converged')") iter + 1, this%total_energy(), this%optimizer%error
+            write (std_out, "(A)")
+
+            call print_header("Converged Energies", std_out)
+            write (std_out, "(A)")
+            call this%cec%print(std_out)
+            call this%ec%print(std_out)
+            write (std_out, "(' Total energy = ',F16.10,' a.u.')") this%total_energy()
+            write (std_out, "(A)")
+        else
+            write (std_out, "(/,'SCF failed to converge',/)")
+        end if
 
     end subroutine kernal
 

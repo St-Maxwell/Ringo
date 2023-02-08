@@ -1,0 +1,96 @@
+    -----------------------------------------------------------------------
+                   Ringo: Ringo Is Not Gaussian/Orca
+                         Version: 0.0.1, alpha
+
+                                 Author
+                  St Maxwell (st_maxwell@outlook.com)
+
+                  https://github.com/St-Maxwell/Ringo
+
+    -----------------------------------------------------------------------
+
+ ==> Input File <==
+--------------------------------------------------------------------------------
+$molecule
+0 1
+N            0.000000000000     0.000000000000    -0.059191400928
+H            0.000000000000     0.942809040000     0.274142019072
+H            0.816496580000    -0.471404520000     0.274142019072
+H           -0.816496580000    -0.471404520000     0.274142019072
+$end
+
+$set
+method HF
+basis = def2-svp
+verbose =  1 
+$end
+
+--------------------------------------------------------------------------------
+
+ ==> Loading Basis Set <==
+
+ Atom: H  Basis set: def2-svp
+   in file C:/Users/St_Maxwell/Documents/Ringo/src/mole/basis/def2-svp.dat
+ Atom: N  Basis set: def2-svp
+   in file C:/Users/St_Maxwell/Documents/Ringo/src/mole/basis/def2-svp.dat
+
+ ==> Geometry <==
+
+ Charge = 0, Spin multiplicity = 1
+ Cartesian coordinates (in Angstroms):
+
+     Atom           X                 Y                 Z
+    ------  ----------------  ----------------  ----------------
+      N        0.0000000000      0.0000000000     -0.0591914009
+      H        0.0000000000      0.9428090400      0.2741420191
+      H        0.8164965800     -0.4714045200      0.2741420191
+      H       -0.8164965800     -0.4714045200      0.2741420191
+
+ Nuclear repulsion energy = 12.0848817359 a.u.
+ The number of pure spherical functions = 29
+ The number of shells = 15
+
+ ==> SCF Job Paramters <==
+
+ Guess : hcore
+ Algorithm : Roothaan diagonalization
+ Max steps : 100
+
+ ==> SCF Iterations <==
+
+          Total Energy       RMS [P, F]
+
+    1     -51.13946146       0.22460678
+    2     -53.71298556       0.14692892
+    3     -54.14963390       0.15745396
+    4     -55.18235295       0.10899762
+    5     -55.84217363       0.10474292
+    6     -56.05845314       0.05513036
+    7     -56.12419384       0.03291249
+    8     -56.14197519       0.01631500
+    9     -56.14676088       0.00875793
+   10     -56.14802649       0.00441029
+   11     -56.14836180       0.00230512
+   12     -56.14845035       0.00117232
+   13     -56.14847376       0.00060804
+   14     -56.14847994       0.00031036
+   15     -56.14848157       0.00016058
+   16     -56.14848200       0.00008207
+   17     -56.14848212       0.00004242
+   18     -56.14848215       0.00002170
+   19     -56.14848216       0.00001121
+   20     -56.14848216       0.00000574
+   21     -56.14848216       0.00000296
+   22     -56.14848216       0.00000152
+   24     -56.14848216       0.00000078 <-- converged
+
+ ==> Converged Energies <==
+
+ Nuclear repulsion energy =    12.0848817359 a.u.
+ Coulomb energy =    39.2884500226 a.u.
+ Exchange energy =    -7.6912211900 a.u.
+ One-electron energy =   -99.8305927278 a.u.
+ Total energy =   -56.1484821593 a.u.
+
+Total Run Time: 0 days 0 hours 0 minutes 1.90 seconds
+Ringo Normal Termination on: 2023-02-08 23:25:00
