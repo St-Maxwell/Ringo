@@ -25,7 +25,7 @@ module ringo_env
     character(len=*), parameter :: ringo_welcome = &
         "    -----------------------------------------------------------------------"//LF// &
         "                   Ringo: Ringo Is Not Gaussian/Orca"//LF// &
-        "                         Version: 0.0.1, alpha"//LF//LF// &
+        "                         Version: 0.0.2, alpha"//LF//LF// &
         "                                 Author"//LF// &
         "                  St Maxwell (st_maxwell@outlook.com)"//LF//LF// &
         "                  https://github.com/St-Maxwell/Ringo"//LF//LF// &
