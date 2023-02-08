@@ -142,22 +142,9 @@ contains
                 eri(1:dp, 1:dq, 1:dr, 1:ds) => buf2e(:dp*dq*dr*ds)
 
                 !> J_pq = (pq|rs)*D_rs
-                do iy = 1, dq
-                    do ix = 1, dp
-                        J(x + ix - 1, y + iy - 1) = J(x + ix - 1, y + iy - 1) &
-                                                & + frs*sum(eri(ix, iy, :, :)*dm(z:zz, w:ww))
-                    end do
-                end do
+                call contract(eri, dm(z:zz,w:ww), [3,4], frs, J(x:xx,y:yy))
 
-                if (ipr /= jpr) then
-                    !> J_rs = (pq|rs)*D_pq
-                    do iw = 1, ds
-                        do iz = 1, dr
-                            J(z + iz - 1, w + iw - 1) = J(z + iz - 1, w + iw - 1) &
-                                                    & + fpq*sum(eri(:, :, iz, iw)*dm(x:xx, y:yy))
-                        end do
-                    end do
-                end if
+                if (ipr /= jpr) call contract(eri, dm(x:xx,y:yy), [1,2], fpq, J(z:zz,w:ww))
 
             end do
         end do
@@ -171,6 +158,7 @@ contains
             x = shl_slices(p); xx = x + dp - 1
             y = shl_slices(q); yy = y + dq - 1
 
+            J(x:xx, y:yy) = J(x:xx, y:yy) + transpose(J(y:yy, x:xx))
             J(y:yy, x:xx) = transpose(J(x:xx, y:yy))
         end do
 
@@ -255,6 +243,54 @@ contains
         call CINTdel_optimizer(opt)
 
     end subroutine calc_K
+
+    subroutine contract(eri, dm, cnt_idx, fact, out)
+        real(kind=f8), dimension(:, :, :, :), intent(in) :: eri
+        real(kind=f8), dimension(:, :), intent(in) :: dm
+        integer, dimension(2), intent(in) :: cnt_idx
+        real(kind=f8), intent(in) :: fact !> factor
+        real(kind=f8), dimension(:, :), intent(inout) :: out !> increment
+        integer :: i, j
+
+        if (all(cnt_idx == [1, 2])) then
+            do j = 1, size(out, dim=2)
+                do i = 1, size(out, dim=1)
+                    out(i, j) = out(i, j) + fact*sum(eri(:, :, i, j)*dm(:, :))
+                end do
+            end do
+        else if (all(cnt_idx == [1, 3])) then
+            do j = 1, size(out, dim=2)
+                do i = 1, size(out, dim=1)
+                    out(i, j) = out(i, j) + fact*sum(eri(:, i, :, j)*dm(:, :))
+                end do
+            end do
+        else if (all(cnt_idx == [1, 4])) then
+            do j = 1, size(out, dim=2)
+                do i = 1, size(out, dim=1)
+                    out(i, j) = out(i, j) + fact*sum(eri(:, i, j, :)*dm(:, :))
+                end do
+            end do
+        else if (all(cnt_idx == [2, 3])) then
+            do j = 1, size(out, dim=2)
+                do i = 1, size(out, dim=1)
+                    out(i, j) = out(i, j) + fact*sum(eri(i, :, :, j)*dm(:, :))
+                end do
+            end do
+        else if (all(cnt_idx == [2, 4])) then
+            do j = 1, size(out, dim=2)
+                do i = 1, size(out, dim=1)
+                    out(i, j) = out(i, j) + fact*sum(eri(i, :, j, :)*dm(:, :))
+                end do
+            end do
+        else if (all(cnt_idx == [3, 4])) then
+            do j = 1, size(out, dim=2)
+                do i = 1, size(out, dim=1)
+                    out(i, j) = out(i, j) + fact*sum(eri(i, j, :, :)*dm(:, :))
+                end do
+            end do
+        end if
+
+    end subroutine contract
 
     pure function buffer_size(bas) result(n)
         integer(kind=i4), dimension(:), intent(in) :: bas
